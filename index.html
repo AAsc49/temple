@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les Templiers — Tableau synoptique</title>
+<meta name="description" content="Tableau synoptique interactif de l’Ordre du Temple (1096-1314) : grands maîtres, croisades, rois capétiens, papes, rois de Jérusalem. Frise, carte, généalogies, blasons.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M44 44L30 4h40L56 44 96 30v40L56 56l14 40H30l14-40L4 70V30z' fill='%23b3202a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#f6f1e6;--bg2:#ece2cc;--card:#fffdf7;--ink:#2a2017;--muted:#6d5f4d;--line:#dccfb3;
+  --accent:#a3242b;--on-accent:#fff;
+  --gm:#3b68a1;--cr:#c4910f;--roi:#4c8739;--pape:#cf6f22;--rj:#1f8597;--ev:#a3242b;
+  --shadow:0 1px 2px rgba(60,40,10,.07),0 6px 18px rgba(60,40,10,.07);
+  --radius:12px;color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15120e;--bg2:#211b14;--card:#1d1812;--ink:#efe5d3;--muted:#b0a28b;--line:#3a3127;
+  --accent:#d8464e;--gm:#6f9be0;--cr:#e2b43b;--roi:#7dbb66;--pape:#f0944a;--rj:#4ab8cb;--ev:#e0545b;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.3);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15120e;--bg2:#211b14;--card:#1d1812;--ink:#efe5d3;--muted:#b0a28b;--line:#3a3127;
+  --accent:#d8464e;--gm:#6f9be0;--cr:#e2b43b;--roi:#7dbb66;--pape:#f0944a;--rj:#4ab8cb;--ev:#e0545b;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.3);color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.55 "EB Garamond",Georgia,serif;overflow-x:hidden}
+a{color:inherit}
+h1,h2,h3,h4{font-family:Cinzel,Georgia,serif;font-weight:700;letter-spacing:.02em;line-height:1.2;margin:0 0 .5em}
+h1{font-size:clamp(1.55rem,4vw,2.3rem)}
+h2{font-size:1.3rem;margin-top:1.8em}
+h3{font-size:1.02rem}
+h4{font-size:.85rem}
+p{margin:0 0 .8em}
+button{font:inherit;color:inherit}
+.t-gm{--c:var(--gm)}.t-cr{--c:var(--cr)}.t-roi{--c:var(--roi)}.t-pape{--c:var(--pape)}.t-rj{--c:var(--rj)}.t-ev{--c:var(--ev)}
+
+/* header */
+.sticky{position:sticky;top:0;z-index:1000;background:var(--bg);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:12px;padding:10px 16px;max-width:1240px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:Cinzel;font-weight:700;white-space:nowrap}
+.brand svg{width:30px;height:30px;flex:none}
+.brand small{display:block;font-family:"EB Garamond";font-weight:400;color:var(--muted);font-size:.78rem;letter-spacing:.06em}
+.search{position:relative;flex:1;max-width:420px;margin-left:auto}
+.search input{width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font:inherit;font-size:16px}
+.search input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.qres{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);display:none;max-height:65vh;overflow:auto;z-index:1001}
+.qres.open{display:block}
+.qres a{display:flex;gap:10px;align-items:center;padding:8px 12px;text-decoration:none;border-bottom:1px solid var(--line)}
+.qres a:last-child{border-bottom:0}
+.qres a:hover,.qres a.sel{background:var(--bg2)}
+.qres small{color:var(--muted);margin-left:auto;font-size:.8rem;white-space:nowrap}
+.qres .none{padding:10px 12px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none;display:inline-block}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:999px;width:36px;height:36px;cursor:pointer;flex:none}
+.tabs{display:flex;gap:2px;overflow-x:auto;padding:0 12px;max-width:1240px;margin:0 auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{padding:8px 10px 9px;text-decoration:none;white-space:nowrap;color:var(--muted);border-bottom:2px solid transparent;font-family:Cinzel;font-size:.78rem;letter-spacing:.05em}
+.tabs a:hover{color:var(--ink)}
+.tabs a.on{color:var(--ink);border-color:var(--accent)}
+@media (max-width:560px){.brand span{display:none}}
+
+main{min-height:70vh}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 16px 56px}
+.lead{color:var(--muted);max-width:72ch}
+.none{color:var(--muted);font-style:italic}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);text-decoration:none;cursor:pointer;font-family:Cinzel;font-size:.8rem;letter-spacing:.04em}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:hover{border-color:var(--ink)}
+.lnk{background:none;border:0;color:var(--accent);cursor:pointer;text-decoration:underline;padding:0}
+
+/* hero */
+.hero{text-align:center;padding:44px 16px 28px;background:radial-gradient(ellipse at top,var(--bg2),transparent 70%)}
+.hero .cross{width:60px;height:60px}
+.hero h1{max-width:22ch;margin:12px auto .3em}
+.devise{font-style:italic;color:var(--muted);font-size:1.1rem}
+.hero .ctas{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:var(--radius);padding:14px 16px;text-decoration:none;box-shadow:var(--shadow);transition:transform .15s}
+.stat:hover{transform:translateY(-2px)}
+.stat b{display:block;font-family:Cinzel;font-size:2rem;color:var(--c);line-height:1.1}
+.stat span{color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media (max-width:800px){.two{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+.panel h2{margin-top:0}
+ol.founders{margin:0;padding-left:1.4em}
+ol.founders li{margin:2px 0}
+.tl{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}
+.tl li{position:relative;padding:4px 0 10px 18px}
+.tl li::before{content:"";position:absolute;left:-7px;top:12px;width:12px;height:12px;border-radius:50%;background:var(--c,var(--ev));border:2px solid var(--card)}
+.tl a{text-decoration:none}
+.tl a:hover b{text-decoration:underline}
+.tl time{display:block;font-family:Cinzel;font-size:.75rem;color:var(--muted);letter-spacing:.04em}
+.curse{margin-top:28px;border-left:4px solid var(--accent)}
+.curse .three{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px}
+.curse .three a{display:block;padding:10px 12px;border:1px solid var(--line);border-radius:10px;text-decoration:none;background:var(--bg)}
+.curse .three b{display:block;font-family:Cinzel;font-size:.9rem}
+
+/* chips & badges */
+.badge{display:inline-flex;align-items:center;gap:6px;font-family:Cinzel;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+.badge::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);text-decoration:none;font-size:.95rem}
+.chip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.chip:hover{border-color:var(--c)}
+
+/* liste */
+.filters{display:grid;gap:10px;margin:14px 0 6px}
+.filters input[type=search],.filters select{padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;font-size:16px}
+.fchip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:.95rem}
+.fchip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--muted))}
+.fchip small{color:var(--muted)}
+.fchip.on{background:var(--c,var(--ink));border-color:var(--c,var(--ink));color:#fff}
+.fchip.on i{background:#fff}.fchip.on small{color:#fff;opacity:.85}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tog{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.count{color:var(--muted);margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{display:block;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:var(--radius);padding:12px 14px;text-decoration:none;box-shadow:var(--shadow);transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-2px);border-color:var(--c)}
+.card .ct{display:flex;justify-content:space-between;align-items:center}
+.card .num{font-family:Cinzel;font-weight:700;color:var(--c);font-size:1.1rem}
+.card h3{margin:.3em 0 .15em;font-size:1rem}
+.card .cd{color:var(--muted);margin:0;font-size:.95rem}
+.card .cs{margin:.3em 0 0;font-size:.92rem}
+
+/* fiche */
+.crumb{font-size:.9rem;color:var(--muted);margin-bottom:10px}
+.crumb a{color:var(--muted)}
+.fhead{border-left:6px solid var(--c);padding-left:16px;margin-bottom:18px}
+.fhead h1{margin:.2em 0 .1em}
+.fhead .alias{font-style:italic;color:var(--muted);font-size:1.1rem}
+.fgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:24px}
+@media (max-width:860px){.fgrid{grid-template-columns:1fr}}
+dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0 0 14px}
+dl.facts dt{font-family:Cinzel;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:4px}
+dl.facts dd{margin:0}
+.notes p{font-size:1.05rem}
+.ctg{margin:12px 0}
+.ctg h4{margin-bottom:6px;color:var(--c)}
+.pn{display:flex;justify-content:space-between;gap:10px;margin-top:28px;flex-wrap:wrap}
+.pn a{flex:1;min-width:180px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;text-decoration:none;background:var(--card)}
+.pn a small{display:block;color:var(--muted);font-family:Cinzel;font-size:.7rem;letter-spacing:.05em}
+.pn a.nx{text-align:right}
+.wiki .imgs{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.wiki figure{margin:0;text-align:center}
+.wiki figure img{max-width:150px;max-height:190px;border-radius:8px;border:1px solid var(--line);background:#fff;object-fit:contain}
+.wiki figcaption{font-size:.78rem;color:var(--muted)}
+.wiki .links{display:flex;flex-direction:column;gap:4px;margin-top:8px;font-size:.95rem}
+.src{font-size:.8rem;color:var(--muted)}
+
+/* année */
+.yctrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.yctrl output{font-family:Cinzel;font-size:2.4rem;font-weight:700;min-width:3.2ch;text-align:center;color:var(--accent)}
+.yctrl button{border:1px solid var(--line);background:var(--card);border-radius:999px;min-width:40px;height:40px;cursor:pointer;padding:0 12px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.jumps{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 18px}
+.ypanel{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.ycol{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:var(--radius);padding:12px}
+.ycol h4{color:var(--c)}
+.ycard{display:block;text-decoration:none;padding:6px 0;border-top:1px dashed var(--line)}
+.ycard:first-of-type{border-top:0}
+.ycard b{display:block}
+.ycard span{font-size:.88rem;color:var(--muted)}
+.ycard:hover b{text-decoration:underline}
+
+/* frise */
+.fctrl{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0 12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:var(--card);padding:6px 14px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.frise{display:grid;grid-template-columns:118px minmax(0,1fr);border:1px solid var(--line);border-radius:var(--radius);background:var(--card);overflow:hidden;box-shadow:var(--shadow)}
+@media (max-width:560px){.frise{grid-template-columns:78px minmax(0,1fr)}.flabels div{font-size:.6rem!important}}
+.flabels{position:relative;border-right:1px solid var(--line);background:var(--bg2)}
+.flabels div{position:absolute;left:0;right:0;display:flex;align-items:center;gap:6px;padding:0 8px;font-family:Cinzel;font-size:.7rem;line-height:1.15;border-top:1px solid var(--line);color:var(--c)}
+.fscroll{overflow-x:auto;overflow-y:hidden;cursor:crosshair}
+.fscroll svg{display:block}
+svg .lb{fill:transparent}
+svg .lb.odd{fill:var(--bg2);opacity:.45}
+svg .gl{stroke:var(--line);stroke-width:1}
+svg .ax{fill:var(--muted);font:13px "EB Garamond",serif}
+svg .fb{cursor:pointer}
+svg .fb rect,svg .fb path{fill:var(--c);opacity:.9;stroke:var(--card);stroke-width:1.5}
+svg .fb:hover rect,svg .fb:hover path{opacity:1;stroke:var(--ink);stroke-width:1.5}
+svg .fb text{fill:#fff;font:600 12px "EB Garamond",serif;pointer-events:none}
+svg .t-cr text{fill:#2a2017}
+svg .cur{stroke:var(--accent);stroke-width:2}
+svg .curl{fill:var(--accent);font:700 13px Cinzel,serif}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.9rem;color:var(--muted)}
+
+/* carte */
+#map{height:min(72vh,640px);border-radius:var(--radius);border:1px solid var(--line);box-shadow:var(--shadow);z-index:1}
+.leaflet-popup-content{font:15px/1.45 "EB Garamond",serif;margin:12px 14px}
+.leaflet-popup-content b{font-family:Cinzel;font-size:.85rem}
+.leaflet-popup-content .chips{margin-top:6px}
+.leaflet-popup-content .chip{font-size:.85rem;color:#2a2017;background:#fff}
+.note{font-size:.9rem;color:var(--muted);margin-top:8px}
+
+/* généalogie & blasons */
+.mm{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);min-height:200px}
+.mm svg{max-width:none!important;height:auto}
+.mm a{cursor:pointer}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.bl{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:12px 10px;background:var(--card);border:1px solid var(--line);border-bottom:4px solid var(--c);border-radius:var(--radius);text-decoration:none}
+.bl .shield{width:96px;height:110px;display:flex;align-items:center;justify-content:center}
+.bl .shield img{max-width:96px;max-height:110px;object-fit:contain}
+.bl .shield svg{width:70px;height:84px;opacity:.35}
+.bl b{font-size:.92rem;line-height:1.25}
+.bl small{color:var(--muted);font-size:.78rem}
+.bl:hover{border-color:var(--c)}
+
+footer{border-top:1px solid var(--line);padding:22px 16px;text-align:center;color:var(--muted);font-size:.9rem}
+footer p{margin:.2em 0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="sticky">
+  <header class="top">
+    <a class="brand" href="#/" aria-label="Accueil">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M44 44L30 4h40L56 44 96 30v40L56 56l14 40H30l14-40L4 70V30z" fill="#b3202a"/></svg>
+      <span>Les Templiers<small>1096 – 1314</small></span>
+    </a>
+    <div class="search">
+      <label class="sr" for="q">Rechercher</label>
+      <input id="q" type="search" placeholder="Rechercher un nom, un lieu…" autocomplete="off">
+      <div id="qres" class="qres" role="listbox"></div>
+    </div>
+    <button id="theme" class="iconbtn" title="Thème clair / sombre" aria-label="Changer de thème">◐</button>
+  </header>
+  <nav class="tabs" id="tabs">
+    <a href="#/" data-v="accueil">Accueil</a>
+    <a href="#/frise" data-v="frise">Frise</a>
+    <a href="#/annee" data-v="annee">Année par année</a>
+    <a href="#/liste" data-v="liste">Index</a>
+    <a href="#/carte" data-v="carte">Carte</a>
+    <a href="#/genealogie" data-v="genealogie">Généalogies</a>
+    <a href="#/blasons" data-v="blasons">Blasons</a>
+    <a href="#/apropos" data-v="apropos">À propos</a>
+  </nav>
+</div>
+<main id="app"></main>
+<footer>
+  <p>D’après le <i>Tableau synoptique de l’Ordre des Templiers</i> de François-Xavier Laurec.</p>
+  <p>Illustrations et blasons chargés à la volée depuis Wikipédia, Wikidata et Wikimedia Commons · Fonds de carte © OpenStreetMap, © CARTO.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+
+<!-- =====================================================================
+     DONNÉES — tout le contenu du site est ici. Pour corriger une date ou
+     un texte, modifier ce bloc puis pousser le fichier sur GitHub.
+     Dates : "AAAA", "AAAA-MM" ou "AAAA-MM-JJ".
+     ===================================================================== -->
+<script>
+const DATA = {
+meta:{
+  titre:"Les Pauvres Chevaliers du Christ et du Temple de Salomon",
+  devise:"Non nobis, Domine, non nobis, sed nomini tuo da gloriam",
+  auteur:"François-Xavier Laurec"
+},
+founders:[
+  {name:"Hugues de Payens", id:"gm1"},
+  {name:"Geoffroy de Saint-Omer"},
+  {name:"André de Montbard", id:"gm5"},
+  {name:"Payen de Montdidier (Mondésir)"},
+  {name:"Geoffroy Brisol de Frameries"},
+  {name:"Archambault de Saint-Aignan"},
+  {name:"Hugues Rigaud (ou Godefroy)"},
+  {name:"Gondemare"},
+  {name:"Rossal"}
+],
+places:[
+  {id:"payns", name:"Payns (Champagne)", lat:48.383, lng:3.975},
+  {id:"craon", name:"Craon (Maine)", lat:47.848, lng:-0.949},
+  {id:"meaux", name:"Meaux (Champagne)", lat:48.960, lng:2.879},
+  {id:"tramelay", name:"Tramelay (Franche-Comté)", lat:46.316, lng:5.583, approx:true},
+  {id:"montbard", name:"Montbard (Bourgogne)", lat:47.623, lng:4.338},
+  {id:"blanquefort", name:"Blanquefort (Bordelais)", lat:44.912, lng:-0.637, approx:true},
+  {id:"naplouse", name:"Naplouse (Terre sainte)", lat:32.221, lng:35.262},
+  {id:"provence", name:"Provence", lat:43.53, lng:5.45, approx:true},
+  {id:"torroja", name:"Torroja (Catalogne)", lat:41.212, lng:0.811},
+  {id:"flandre", name:"Flandre", lat:51.05, lng:3.30, approx:true},
+  {id:"sable", name:"Sablé (Maine)", lat:47.839, lng:-0.333},
+  {id:"catalogne", name:"Catalogne", lat:41.75, lng:1.60, approx:true},
+  {id:"plessis", name:"Le Plessis-Macé (Anjou)", lat:47.543, lng:-0.672},
+  {id:"chartres", name:"Chartres", lat:48.447, lng:1.489},
+  {id:"auvergne", name:"Auvergne", lat:45.60, lng:3.10, approx:true},
+  {id:"perigord", name:"Périgord", lat:45.18, lng:0.72, approx:true},
+  {id:"normandie", name:"Normandie", lat:49.10, lng:0.30, approx:true},
+  {id:"rouergue", name:"Rouergue", lat:44.35, lng:2.57, approx:true},
+  {id:"champagne", name:"Champagne", lat:48.95, lng:4.36, approx:true},
+  {id:"beaujeu", name:"Beaujeu (Beaujolais)", lat:46.155, lng:4.587},
+  {id:"molay", name:"Molay (Franche-Comté)", lat:47.733, lng:5.803, approx:true},
+  {id:"jerusalem", name:"Jérusalem — Mont du Temple", lat:31.778, lng:35.235, desc:"Les neuf premiers chevaliers logent dans les anciennes écuries du Temple de Salomon. Capitale du royaume de 1099 à 1187."},
+  {id:"acre", name:"Saint-Jean-d’Acre", lat:32.927, lng:35.080, desc:"Capitale du royaume de 1187 à 1291. Tombe aux mains des musulmans en mai 1291."},
+  {id:"troyes", name:"Troyes", lat:48.297, lng:4.074, desc:"Concile de Troyes, 13 janvier 1129 : fondation officielle de l’Ordre."},
+  {id:"venise", name:"Venise", lat:45.438, lng:12.335, desc:"Point de départ de la 4e croisade."},
+  {id:"constantinople", name:"Constantinople", lat:41.008, lng:28.978, desc:"Prise par les croisés de la 4e croisade (1204)."},
+  {id:"brindisi", name:"Brindisi", lat:40.632, lng:17.936, desc:"La croisade des Enfants y est stoppée par Innocent III (1212)."},
+  {id:"montsegur", name:"Montségur", lat:42.875, lng:1.832, desc:"Bûcher de Montségur, 16 mars 1244."},
+  {id:"villeneuve", name:"Villeneuve-sur-Cher", lat:47.040, lng:2.230, desc:"Défaite des Pastoureaux, 11 juin 1251."},
+  {id:"tunis", name:"Tunis (Carthage)", lat:36.853, lng:10.323, desc:"Mort de Saint Louis, 25 août 1270."},
+  {id:"vienne", name:"Vienne (Dauphiné)", lat:45.525, lng:4.874, desc:"Concile de Vienne : dissolution de l’Ordre, 22 mars 1312."},
+  {id:"avignon", name:"Avignon", lat:43.950, lng:4.806, desc:"Le Saint-Siège y est déplacé par Clément V (1309)."},
+  {id:"paris-temple", name:"Paris — Enclos du Temple", lat:48.8655, lng:2.3610, desc:"Maison chef de l’Ordre en France ; arrestation des Templiers le vendredi 13 octobre 1307."},
+  {id:"vertgalant", name:"Paris — Île aux Juifs (square du Vert-Galant)", lat:48.8574, lng:2.3401, desc:"Bûcher de Jacques de Molay et Geoffroy de Charnay, 18 mars 1314."}
+],
+entries:[
+/* ---------- GRANDS MAÎTRES DU TEMPLE ---------- */
+{id:"gm1",type:"gm",n:1,name:"Hugues de Payens",start:"1120-01-13",end:"1136-05-24",dur:"16 ans",origin:"Champagne",place:"payns",wiki:"Hugues de Payns",tags:["templiers","fondateur"],
+ notes:["Fondateur de l’Ordre.","Fondation officielle de l’Ordre le 13 janvier 1129 au concile de Troyes."]},
+{id:"gm2",type:"gm",n:2,name:"Robert de Craon",start:"1136-06",end:"1149-01",dur:"13 ans",origin:"Maine",place:"craon",wiki:"Robert de Craon",tags:["templiers"],
+ notes:["Il reçut du pape Innocent II les privilèges des Templiers et d’Eugène III la croix pattée.","Reconnaissance canonique le 29 mars 1139. La spiritualité est la règle de saint Benoît — ordre cistercien."]},
+{id:"gm3",type:"gm",n:3,name:"Évrard des Barres",start:"1149",end:"1152",dur:"3 ans",origin:"Champagne",originDetail:"Meaux",place:"meaux",wiki:"Évrard des Barres",tags:["templiers"]},
+{id:"gm4",type:"gm",n:4,name:"Bernard de Tremelay",start:"1152",end:"1153-08-16",dur:"1 an",origin:"Franche-Comté",place:"tramelay",wiki:"Bernard de Tramelay",tags:["templiers"]},
+{id:"gm5",type:"gm",n:5,name:"André de Montbard",start:"1153",end:"1156-01-17",dur:"3 ans",origin:"Bourgogne",place:"montbard",wiki:"André de Montbard",tags:["templiers"],
+ notes:["Oncle de saint Bernard. L’un des neuf premiers chevaliers."]},
+{id:"gm6",type:"gm",n:6,name:"Bertrand de Blanquefort",start:"1156",end:"1169-01-02",dur:"13 ans",origin:"Berry ou Bordelais",place:"blanquefort",wiki:"Bertrand de Blanquefort",tags:["templiers"]},
+{id:"gm7",type:"gm",n:7,name:"Philippe de Naplouse",start:"1169",end:"1171-04-03",dur:"2 ans",origin:"Terre sainte",place:"naplouse",wiki:"Philippe de Milly",tags:["templiers"]},
+{id:"gm8",type:"gm",n:8,name:"Eudes de Saint-Amand",start:"1171",end:"1179-10-09",dur:"8 ans",origin:"Provence",place:"provence",wiki:"Eudes de Saint-Amand",tags:["templiers"]},
+{id:"gm9",type:"gm",n:9,name:"Arnaud de Torroja",start:"1180",end:"1184-09-30",dur:"4 ans",origin:"Catalogne",place:"torroja",wiki:"Arnaud de Toroge",tags:["templiers"]},
+{id:"gm10",type:"gm",n:10,name:"Gérard de Ridefort",start:"1185",end:"1189-10-04",dur:"4 ans",origin:"Flandre",place:"flandre",wiki:"Gérard de Ridefort",tags:["templiers"]},
+{id:"gm11",type:"gm",n:11,name:"Robert IV de Sablé",start:"1191",end:"1193-09-28",dur:"2 ans",origin:"Maine",place:"sable",wiki:"Robert de Sablé",tags:["templiers"]},
+{id:"gm12",type:"gm",n:12,name:"Gilbert Eril (ou Horal)",start:"1194",end:"1200-12-21",dur:"6 ans",origin:"Catalogne",place:"catalogne",wiki:"Gilbert Érail",tags:["templiers"]},
+{id:"gm13",type:"gm",n:13,name:"Philippe du Plessis",start:"1201",end:"1209-11-13",dur:"8 ans",origin:"Anjou",originDetail:"Le Plessis-Macé",place:"plessis",wiki:"Philippe du Plessis",tags:["templiers"]},
+{id:"gm14",type:"gm",n:14,name:"Guillaume de Chartres",start:"1210",end:"1219-08-26",dur:"9 ans",origin:"Chartres",place:"chartres",wiki:"Guillaume de Chartres (templier)",tags:["templiers"]},
+{id:"gm15",type:"gm",n:15,name:"Pierre de Montaigu",start:"1219",end:"1232-01-28",dur:"13 ans",origin:"Auvergne",place:"auvergne",wiki:"Pierre de Montaigu",tags:["templiers"]},
+{id:"gm16",type:"gm",n:16,name:"Armand de Périgord",start:"1232",end:"1245-01-02",dur:"13 ans",origin:"Périgord",place:"perigord",wiki:"Armand de Périgord",tags:["templiers"]},
+{id:"gm17",type:"gm",n:17,name:"Richard de Bures",start:"1245",end:"1247-05-09",dur:"2 ans",origin:"Normandie ou Terre sainte",place:"normandie",wiki:"Richard de Bures",tags:["templiers"]},
+{id:"gm18",type:"gm",n:18,name:"Guillaume de Sonnac",start:"1247",end:"1250-02-11",dur:"3 ans",origin:"Rouergue",place:"rouergue",wiki:"Guillaume de Sonnac",tags:["templiers"]},
+{id:"gm19",type:"gm",n:19,name:"Renaud de Vichiers",start:"1250",end:"1256-01-20",dur:"6 ans",origin:"Champagne",place:"champagne",wiki:"Renaud de Vichiers",tags:["templiers"]},
+{id:"gm20",type:"gm",n:20,name:"Thomas Béraud",start:"1256",end:"1273-03-25",dur:"17 ans",origin:"Italie ou Angleterre",wiki:"Thomas Bérard",tags:["templiers"]},
+{id:"gm21",type:"gm",n:21,name:"Guillaume de Beaujeu",start:"1273",end:"1291-05-18",dur:"18 ans",origin:"Beaujolais",place:"beaujeu",wiki:"Guillaume de Beaujeu",tags:["templiers"],
+ notes:["Le 18 mai 1291, il se bat aux côtés de Jean de Villiers, grand maître de l’ordre des Hospitaliers, lors de la chute de Saint-Jean-d’Acre. Il meurt d’une flèche sous l’aisselle."]},
+{id:"gm22",type:"gm",n:22,name:"Thibaud Gaudin",start:"1291",end:"1292-04-16",dur:"1 an",origin:"Chartres",place:"chartres",wiki:"Thibaud Gaudin",tags:["templiers"]},
+{id:"gm23",type:"gm",n:23,name:"Jacques de Molay",start:"1292-04-20",end:"1314-03-18",dur:"22 ans",origin:"Franche-Comté",place:"molay",wiki:"Jacques de Molay",tags:["templiers","1314"],
+ notes:["Dernier grand maître de l’ordre des Pauvres Chevaliers du Christ et du Temple de Salomon de Jérusalem.","« Tourmenté » par le dominicain Guillaume Humbert, grand inquisiteur de France.","Brûlé comme relaps avec Geoffroy de Charnay sur l’île aux Juifs, actuel square du Vert-Galant à Paris, le 18 mars 1314."]},
+
+/* ---------- CROISADES ---------- */
+{id:"cr1",type:"cr",n:1,name:"1re croisade",alias:"dite « populaire » puis « des barons »",start:"1096",end:"1099",ts:true,leaders:"Pierre l’Ermite, Gautier Sans-Avoir",places:["jerusalem"],wiki:"Première croisade",
+ notes:["Menée d’abord par Pierre l’Ermite et Gautier Sans-Avoir (croisade « populaire »), puis par les barons.","Elle aboutit à la prise de Jérusalem et à la fondation du royaume latin."]},
+{id:"cr2",type:"cr",n:2,name:"2e croisade",start:"1147",end:"1149",ts:true,wiki:"Deuxième croisade",
+ notes:["Appel lancé par le pape Eugène III le 1er décembre 1145."]},
+{id:"cr3",type:"cr",n:3,name:"3e croisade",alias:"dite « des Rois »",start:"1189",end:"1192",ts:true,leaders:"Frédéric Ier Barberousse, Philippe Auguste, Richard Cœur de Lion",places:["acre"],wiki:"Troisième croisade",
+ notes:["Conduite par l’empereur Frédéric Barberousse, Philippe Auguste et Richard Cœur de Lion."]},
+{id:"cr4",type:"cr",n:4,name:"4e croisade",alias:"dite « de Venise »",start:"1202",end:"1204",ts:true,places:["venise","constantinople"],wiki:"Quatrième croisade"},
+{id:"cr-enf",type:"cr",name:"Croisade des Enfants",start:"1212",end:"1212",ts:false,places:["brindisi"],wiki:"Croisade des enfants",
+ notes:["Stoppée à Brindisi par Innocent III en 1212."]},
+{id:"cr5",type:"cr",n:5,name:"5e croisade",start:"1217",end:"1221",ts:true,leaders:"Rois de Chypre et de Hongrie",wiki:"Cinquième croisade"},
+{id:"cr6",type:"cr",n:6,name:"6e croisade",start:"1228",end:"1229",ts:true,leaders:"Frédéric II",wiki:"Sixième croisade"},
+{id:"cr-alb",type:"cr",name:"Croisade des Albigeois",start:"1208",end:"1244",ts:false,places:["montsegur"],wiki:"Croisade des albigeois",
+ notes:["Dirigée contre le catharisme.","S’achève avec le bûcher de Montségur, le 16 mars 1244."]},
+{id:"cr7",type:"cr",n:7,name:"7e croisade",start:"1248",end:"1254",ts:true,leaders:"Saint Louis",wiki:"Septième croisade",
+ notes:["Marquée par la capture de Saint Louis."]},
+{id:"cr-past",type:"cr",name:"Croisade des Pastoureaux",start:"1251",end:"1251",ts:false,places:["villeneuve"],wiki:"Croisade des pastoureaux",
+ notes:["Lancée pour libérer Saint Louis.","Défaite le 11 juin 1251 à Villeneuve-sur-Cher."]},
+{id:"cr8",type:"cr",n:8,name:"8e croisade",start:"1270",end:"1270",ts:true,leaders:"Saint Louis",places:["tunis"],wiki:"Huitième croisade",
+ notes:["Mort de Saint Louis à Tunis le 25 août 1270, de la dysenterie (peste ?)."]},
+{id:"cr9",type:"cr",n:9,name:"9e croisade",start:"1271",end:"1291",ts:true,leaders:"Édouard d’Angleterre",places:["acre"],wiki:"Neuvième croisade",
+ notes:["Dernière croisade, qui se termine par la chute de Saint-Jean-d’Acre le 18 mai 1291."]},
+
+/* ---------- ROIS CAPÉTIENS ---------- */
+{id:"roi1",type:"roi",n:1,name:"Philippe Ier",start:"1060-08-04",end:"1108-07-29",dur:"47 ans 11 mois 25 jours",wiki:"Philippe Ier (roi des Francs)"},
+{id:"roi2",type:"roi",n:2,name:"Louis VI",alias:"le Gros",start:"1108-07-29",end:"1137-08-01",dur:"29 ans et 2 jours",wiki:"Louis VI le Gros"},
+{id:"roi3",type:"roi",n:3,name:"Louis VII",alias:"le Jeune",start:"1137-08-01",end:"1180-09-18",dur:"43 ans 1 mois 17 jours",wiki:"Louis VII le Jeune",
+ notes:["Dernier « roi des Francs »."]},
+{id:"roi4",type:"roi",n:4,name:"Philippe II",alias:"Auguste",start:"1180-09-18",end:"1223-07-14",dur:"42 ans 9 mois 26 jours",wiki:"Philippe II Auguste",
+ notes:["Premier « roi de France ».","Participe à la 3e croisade, dite « des Rois »."]},
+{id:"roi5",type:"roi",n:5,name:"Louis VIII",alias:"le Lion",start:"1223-07-14",end:"1226-11-08",dur:"3 ans 3 mois 24 jours",wiki:"Louis VIII le Lion"},
+{id:"roi6",type:"roi",n:6,name:"Louis IX",alias:"Saint Louis",start:"1226-11-08",end:"1270-08-25",dur:"43 ans 9 mois 17 jours",wiki:"Louis IX",
+ notes:["Mène la 7e croisade, au cours de laquelle il est capturé, puis la 8e.","Meurt à Tunis le 25 août 1270."]},
+{id:"roi7",type:"roi",n:7,name:"Philippe III",alias:"le Hardi",start:"1270-08-25",end:"1285-10-05",dur:"15 ans 1 mois 2 jours",wiki:"Philippe III le Hardi"},
+{id:"roi8",type:"roi",n:8,name:"Philippe IV",alias:"le Bel",start:"1285-10-05",end:"1314-11-29",dur:"29 ans 1 mois 24 jours",wiki:"Philippe IV le Bel",tags:["templiers","1314"],
+ notes:["Ordonne l’arrestation des Templiers, menée par Guillaume de Nogaret le vendredi 13 octobre 1307.","Sa mort est directement liée à une chute de cheval survenue le 4 novembre 1314."]},
+
+/* ---------- PAPES ---------- */
+{id:"p1",type:"pape",n:1,name:"Urbain II",civil:"Eudes de Lagery",ordre:"Bénédictin",fr:true,start:"1088-03-12",end:"1099-07-29",dur:"11 ans",wiki:"Urbain II"},
+{id:"p2",type:"pape",n:2,name:"Pascal II",civil:"Reniero Bleda di Galeata",ordre:"Cîteaux (selon le tableau)",start:"1099-08-13",end:"1118-01-21",dur:"19 ans",wiki:"Pascal II"},
+{id:"p3",type:"pape",n:3,name:"Gélase II",civil:"Giovanni de Gaète",ordre:"Bénédictin",start:"1118-01-24",end:"1119-01-29",dur:"1 an",wiki:"Gélase II"},
+{id:"p4",type:"pape",n:4,name:"Calixte II",civil:"Gui de Bourgogne",fr:true,start:"1119-02-01",end:"1124-12-12",dur:"5 ans",wiki:"Calixte II"},
+{id:"p5",type:"pape",n:5,name:"Honorius II",civil:"Lamberto Scannabecchi",start:"1124-12-21",end:"1130-02-13",dur:"6 ans",wiki:"Honorius II",tags:["templiers"],
+ notes:["Pape en fonction pendant le concile de Troyes.","C’est à l’instigation de Bernard de Clairvaux (1090-1153) que l’Ordre fut initié par le pape Honorius II."]},
+{id:"p6",type:"pape",n:6,name:"Innocent II",civil:"Grégoire Papareschi",start:"1130-02-14",end:"1143-09-24",dur:"13 ans",wiki:"Innocent II",tags:["templiers"],
+ notes:["Le 29 mars 1139, bulle Omne datum optimum créant les privilèges des Templiers."]},
+{id:"p7",type:"pape",n:7,name:"Célestin II",start:"1143-09-26",end:"1144-04-08",dur:"6 mois",wiki:"Célestin II"},
+{id:"p8",type:"pape",n:8,name:"Lucius II",start:"1144-03-12",end:"1145-02-15",dur:"11 mois",wiki:"Lucius II"},
+{id:"p9",type:"pape",n:9,name:"Eugène III",civil:"Bernardo Paganelli",ordre:"Cistercien",start:"1145-02-15",end:"1153-07-08",dur:"8 ans",wiki:"Eugène III",tags:["templiers"],
+ notes:["En 1146, le pape donne aux Templiers la tunique blanche et la croix pattée rouge.","Le 1er décembre 1145, appel à la deuxième croisade."]},
+{id:"p10",type:"pape",n:10,name:"Anastase IV",start:"1153-07-12",end:"1154-12-03",dur:"1 an",wiki:"Anastase IV"},
+{id:"p11",type:"pape",n:11,name:"Adrien IV",civil:"Nicolas Breakspear",ordre:"Saint-Augustin",start:"1154-12-04",end:"1159-09-01",dur:"5 ans",wiki:"Adrien IV",
+ notes:["Pape anglais."]},
+{id:"p12",type:"pape",n:12,name:"Alexandre III",civil:"Orlando Bandinelli",start:"1159-09-07",end:"1181-08-30",dur:"22 ans",wiki:"Alexandre III (pape)"},
+{id:"p13",type:"pape",n:13,name:"Lucius III",civil:"Ubaldo Allucingoli",ordre:"Cistercien",start:"1181-09-01",end:"1185-11-25",dur:"4 ans",wiki:"Lucius III"},
+{id:"p14",type:"pape",n:14,name:"Urbain III",civil:"Uberto Crivelli",start:"1185-11-25",end:"1187-10-20",dur:"2 ans",wiki:"Urbain III"},
+{id:"p15",type:"pape",n:15,name:"Grégoire VIII",civil:"Alberto di Morra",start:"1187-10-21",end:"1187-12-17",dur:"2 mois",wiki:"Grégoire VIII"},
+{id:"p16",type:"pape",n:16,name:"Clément III",civil:"Paolo Scolari",start:"1187-12-19",end:"1191-03-27",dur:"4 ans",wiki:"Clément III"},
+{id:"p17",type:"pape",n:17,name:"Célestin III",civil:"Giacinto di Petro di Bobone",start:"1191-03-30",end:"1198-01-08",dur:"7 ans",wiki:"Célestin III"},
+{id:"p18",type:"pape",n:18,name:"Innocent III",civil:"Lotario Conti",start:"1198-01-08",end:"1216-07-16",dur:"18 ans",wiki:"Innocent III"},
+{id:"p19",type:"pape",n:19,name:"Honorius III",civil:"Censio Savelli",start:"1216-07-18",end:"1227-03-18",dur:"11 ans",wiki:"Honorius III"},
+{id:"p20",type:"pape",n:20,name:"Grégoire IX",civil:"Ugolino de Anagni",start:"1227-03-19",end:"1241-08-22",dur:"14 ans",wiki:"Grégoire IX"},
+{id:"p21",type:"pape",n:21,name:"Célestin IV",civil:"Goffredo Castiglioni",ordre:"Bénédictin",start:"1241-10-25",end:"1241-11-10",dur:"3 semaines",wiki:"Célestin IV"},
+{id:"p22",type:"pape",n:22,name:"Innocent IV",civil:"Sinibaldo de Fieschi",start:"1243-06-25",end:"1254-12-07",dur:"11 ans",wiki:"Innocent IV"},
+{id:"p23",type:"pape",n:23,name:"Alexandre IV",civil:"Rinaldo Conti",start:"1254-12-12",end:"1261-05-25",dur:"7 ans",wiki:"Alexandre IV"},
+{id:"p24",type:"pape",n:24,name:"Urbain IV",civil:"Jacques de Troyes",fr:true,start:"1261-08-29",end:"1264-10-02",dur:"3 ans",wiki:"Urbain IV"},
+{id:"p25",type:"pape",n:25,name:"Clément IV",civil:"Guy Foulquois",fr:true,start:"1265-02-05",end:"1268-11-29",dur:"3 ans",wiki:"Clément IV"},
+{id:"p26",type:"pape",n:26,name:"Grégoire X",civil:"Tebaldo Visconti",ordre:"Cistercien",start:"1271-12-01",end:"1276-01-10",dur:"5 ans",wiki:"Grégoire X"},
+{id:"p27",type:"pape",n:27,name:"Innocent V",start:"1276-01-21",end:"1276-06-22",dur:"5 mois",wiki:"Innocent V"},
+{id:"p28",type:"pape",n:28,name:"Adrien V",start:"1276-07-11",end:"1276-08-18",dur:"1 mois",wiki:"Adrien V"},
+{id:"p29",type:"pape",n:29,name:"Jean XXI",start:"1276-09-13",end:"1277-05-20",dur:"8 mois",wiki:"Jean XXI"},
+{id:"p30",type:"pape",n:30,name:"Nicolas III",ordre:"Bénédictin",start:"1277-11-25",end:"1280-08-22",dur:"3 ans",wiki:"Nicolas III"},
+{id:"p31",type:"pape",n:31,name:"Martin IV",civil:"Simon de Brion",fr:true,start:"1281-02-22",end:"1285-03-28",dur:"4 ans et 1 mois",wiki:"Martin IV"},
+{id:"p32",type:"pape",n:32,name:"Honorius IV",civil:"Giacomo Savelli",start:"1285-04-02",end:"1287-04-03",dur:"2 ans",wiki:"Honorius IV"},
+{id:"p33",type:"pape",n:33,name:"Nicolas IV",civil:"Girolamo Masci",start:"1288-02-15",end:"1292-04-04",dur:"4 ans",wiki:"Nicolas IV"},
+{id:"p34",type:"pape",n:34,name:"Célestin V",civil:"Pietro Angeleri",start:"1294-07-05",end:"1294-12-13",dur:"5 mois",wiki:"Célestin V"},
+{id:"p35",type:"pape",n:35,name:"Boniface VIII",civil:"Benedetto Caetani",start:"1294-12-24",end:"1303-10-11",dur:"9 ans",wiki:"Boniface VIII"},
+{id:"p36",type:"pape",n:36,name:"Benoît XI",civil:"Nicolas Boccasini",start:"1303-10-22",end:"1304-07-07",dur:"10 mois",wiki:"Benoît XI"},
+{id:"p37",type:"pape",n:37,name:"Clément V",civil:"Bertrand de Got",fr:true,start:"1305-06-05",end:"1314-04-20",dur:"9 ans",wiki:"Clément V",tags:["templiers","1314"],
+ notes:["Élu le 5 juin 1305, couronné le 14 novembre 1305.","Déplace le Saint-Siège à Avignon en 1309.","Dissout l’Ordre au concile de Vienne le 22 mars 1312 (bulle Vox in excelso, publiée le 3 avril 1312).","Meurt d’un cancer des intestins le 20 avril 1314."]},
+
+/* ---------- ROIS ET REINES DE JÉRUSALEM ET DE SAINT-JEAN-D'ACRE ---------- */
+{id:"rj1",type:"rj",n:1,name:"Godefroy de Bouillon",alias:"Avoué du Saint-Sépulcre",start:"1099-07-17",end:"1100-07-18",capital:"Jérusalem",wiki:"Godefroy de Bouillon"},
+{id:"rj2",type:"rj",n:2,name:"Baudouin Ier de Boulogne",start:"1100-11-11",end:"1118-04-02",capital:"Jérusalem",wiki:"Baudouin Ier de Jérusalem",notes:["Frère de Godefroy de Bouillon."]},
+{id:"rj3",type:"rj",n:3,name:"Baudouin II du Bourg",start:"1118-04",end:"1131-08-21",capital:"Jérusalem",wiki:"Baudouin II de Jérusalem",notes:["Comte d’Édesse, cousin de Baudouin Ier."]},
+{id:"rj4",type:"rj",n:4,name:"Foulques V d’Anjou",start:"1131-09-14",end:"1143-11-10",capital:"Jérusalem",wiki:"Foulque V d'Anjou",notes:["Comte d’Anjou, mari de Mélisende de Jérusalem (fille de Baudouin II)."]},
+{id:"rj5",type:"rj",n:5,name:"Baudouin III",start:"1143-12-25",end:"1162-02-10",capital:"Jérusalem",wiki:"Baudouin III de Jérusalem",notes:["Fils de Foulques V d’Anjou et de Mélisende de Jérusalem."]},
+{id:"rj6",type:"rj",n:6,name:"Amaury Ier",start:"1162-02",end:"1174-07-11",capital:"Jérusalem",wiki:"Amaury Ier de Jérusalem",notes:["Frère de Baudouin III."]},
+{id:"rj7",type:"rj",n:7,name:"Baudouin IV",alias:"le Lépreux",start:"1174-07-15",end:"1185-03",capital:"Jérusalem",wiki:"Baudouin IV de Jérusalem",notes:["Fils d’Amaury Ier et d’Agnès de Courtenay."]},
+{id:"rj8",type:"rj",n:8,name:"Baudouin V",start:"1185",end:"1186",capital:"Jérusalem",wiki:"Baudouin V de Jérusalem",notes:["Fils de Guillaume de Montferrat et de Sibylle de Jérusalem."]},
+{id:"rj9",type:"rj",n:9,name:"Guy de Lusignan",alias:"règne avec sa femme",start:"1186-08",end:"1190",capital:"Jérusalem puis Acre",wiki:"Gui de Lusignan",
+ notes:["Marié à Sibylle de Jérusalem, il règne avec sa femme.","Jérusalem tombe aux mains de Saladin le 2 octobre 1187. Le titre de royaume de Jérusalem subsiste mais est transféré au royaume de Saint-Jean-d’Acre (1187-1291)."]},
+{id:"rj10",type:"rj",n:10,name:"Guy de Lusignan",alias:"règne personnel",start:"1190",end:"1192-04",capital:"Acre",wiki:"Gui de Lusignan"},
+{id:"rj11",type:"rj",n:11,name:"Isabelle Ire de Jérusalem",start:"1192",end:"1205",capital:"Acre",wiki:"Isabelle Ire de Jérusalem",notes:["Fille d’Amaury Ier."]},
+{id:"rj12",type:"rj",n:12,name:"Marie de Montferrat",start:"1205",end:"1212",capital:"Acre",wiki:"Marie de Montferrat",notes:["Fille d’Isabelle Ire de Jérusalem."]},
+{id:"rj13",type:"rj",n:13,name:"Jean de Brienne",start:"1212",end:"1225",capital:"Acre",wiki:"Jean de Brienne",notes:["Mari de Marie de Montferrat (règne personnel)."]},
+{id:"rj14",type:"rj",n:14,name:"Isabelle II",start:"1225",end:"1228",capital:"Acre",wiki:"Isabelle II de Jérusalem",notes:["Fille de Jean de Brienne et de Marie de Montferrat. Règne avec son époux Frédéric II."]},
+{id:"rj15",type:"rj",n:15,name:"Frédéric II de Hohenstaufen",alias:"règne personnel",start:"1228",end:"1232",capital:"Acre",wiki:"Frédéric II (empereur du Saint-Empire)",notes:["Conduit la 6e croisade."]},
+{id:"rj16",type:"rj",n:16,name:"Conrad IV de Hohenstaufen",start:"1232",end:"1254",capital:"Acre",wiki:"Conrad IV (roi des Romains)",notes:["Fils de Frédéric II et d’Isabelle II de Jérusalem."]},
+{id:"rj17",type:"rj",n:17,name:"Conradin",start:"1254",end:"1268",capital:"Acre",wiki:"Conradin",notes:["Fils de Conrad IV et d’Élisabeth de Bavière."]},
+{id:"rj18",type:"rj",n:18,name:"Hugues III de Poitiers-Lusignan",start:"1269",end:"1284",capital:"Acre",wiki:"Hugues III de Chypre",notes:["Aîné des descendants d’Isabelle Ire."]},
+{id:"rj19",type:"rj",n:19,name:"Jean Ier de Chypre",start:"1284",end:"1285",capital:"Acre",wiki:"Jean Ier de Chypre"},
+{id:"rj20",type:"rj",n:20,name:"Henri II de Poitiers-Lusignan",start:"1285",end:"1291",capital:"Acre",wiki:"Henri II de Chypre",
+ notes:["Saint-Jean-d’Acre tombe aux mains des musulmans en mai 1291 (le 28 selon cette colonne du tableau). La royauté de Jérusalem devient un titre prestigieux sans royaume."]}
+],
+events:[
+{id:"ev-chev",date:"1120",title:"Les neuf premiers chevaliers",place:"jerusalem",links:["gm1","gm5","rj3"],
+ text:"Les neuf premiers chevaliers restent neuf années dans les anciennes écuries du Temple de Salomon à Jérusalem."},
+{id:"ev-champ",date:"1126",title:"Le comte de Champagne rejoint les chevaliers",links:["gm1"],
+ text:"Les neuf premiers chevaliers sont rejoints par le comte de Champagne à la fin de 1126."},
+{id:"ev-troyes",date:"1129-01-13",title:"Concile de Troyes",place:"troyes",links:["gm1","p5"],wiki:"Concile de Troyes",
+ text:"Fondation officielle de l’Ordre, à l’instigation de Bernard de Clairvaux."},
+{id:"ev-omne",date:"1139-03-29",title:"Bulle Omne datum optimum",links:["p6","gm2"],wiki:"Omne datum optimum",
+ text:"Innocent II crée les privilèges des Templiers ; reconnaissance canonique de l’Ordre."},
+{id:"ev-appel2",date:"1145-12-01",title:"Appel à la 2e croisade",links:["p9","cr2"],
+ text:"Eugène III appelle à la seconde croisade."},
+{id:"ev-croix",date:"1146",title:"Tunique blanche et croix pattée",links:["p9","gm2"],
+ text:"Eugène III donne aux Templiers la tunique blanche et la croix pattée rouge."},
+{id:"ev-jeru",date:"1187-10-02",title:"Chute de Jérusalem",place:"jerusalem",links:["rj9","gm10"],wiki:"Siège de Jérusalem (1187)",
+ text:"Jérusalem tombe aux mains de Saladin. Le royaume est transféré à Saint-Jean-d’Acre jusqu’en 1291."},
+{id:"ev-montsegur",date:"1244-03-16",title:"Bûcher de Montségur",place:"montsegur",links:["cr-alb"],wiki:"Siège de Montségur",
+ text:"Fin de la croisade des Albigeois contre le catharisme."},
+{id:"ev-past",date:"1251-06-11",title:"Défaite des Pastoureaux",place:"villeneuve",links:["cr-past","roi6"],
+ text:"Les Pastoureaux, partis libérer Saint Louis, sont défaits à Villeneuve-sur-Cher."},
+{id:"ev-tunis",date:"1270-08-25",title:"Mort de Saint Louis à Tunis",place:"tunis",links:["roi6","cr8"],
+ text:"Saint Louis meurt de la dysenterie (peste ?) devant Tunis."},
+{id:"ev-acre",date:"1291-05-18",title:"Chute de Saint-Jean-d’Acre",place:"acre",links:["gm21","rj20","cr9"],wiki:"Siège d'Acre (1291)",
+ text:"Guillaume de Beaujeu meurt au combat. Fin des États latins d’Orient ; la royauté de Jérusalem devient un titre sans royaume."},
+{id:"ev-arrest",date:"1307-10-13",title:"Arrestation des Templiers",place:"paris-temple",links:["roi8","gm23","p37"],wiki:"Procès de l'ordre du Temple",
+ text:"Vendredi 13 octobre 1307 : arrestation des Templiers par Guillaume de Nogaret sur ordre de Philippe IV le Bel."},
+{id:"ev-avignon",date:"1309",title:"Le Saint-Siège à Avignon",place:"avignon",links:["p37"],wiki:"Papauté d'Avignon",
+ text:"Clément V déplace le Saint-Siège à Avignon."},
+{id:"ev-vienne",date:"1312-03-22",title:"Dissolution de l’Ordre",place:"vienne",links:["p37","gm23","roi8"],wiki:"Concile de Vienne",
+ text:"Dissolution de l’Ordre au concile de Vienne par la bulle Vox in excelso, publiée le 3 avril 1312."},
+{id:"ev-nogaret",date:"1313-03",title:"Mort de Guillaume de Nogaret",links:["roi8"],wiki:"Guillaume de Nogaret",
+ text:"Le garde des Sceaux qui avait conduit l’arrestation des Templiers meurt à Paris."},
+{id:"ev-molay",date:"1314-03-18",title:"Bûcher de Jacques de Molay",place:"vertgalant",links:["gm23"],tags:["1314"],
+ text:"Jacques de Molay est brûlé comme relaps avec Geoffroy de Charnay sur l’île aux Juifs. 1er décès de l’année 1314."},
+{id:"ev-clement",date:"1314-04-20",title:"Mort de Clément V",links:["p37"],tags:["1314"],
+ text:"Le pape meurt d’un cancer des intestins. 2e décès de l’année 1314."},
+{id:"ev-chute",date:"1314-11-04",title:"Chute de cheval de Philippe le Bel",links:["roi8"],
+ text:"Accident directement lié à la mort du roi quelques semaines plus tard."},
+{id:"ev-philippe",date:"1314-11-29",title:"Mort de Philippe IV le Bel",links:["roi8"],tags:["1314"],
+ text:"3e décès de l’année 1314."}
+],
+genealogies:{
+jerusalem:`flowchart TD
+  rj1["1. Godefroy de Bouillon<br/>1099–1100"]
+  rj2["2. Baudouin Ier de Boulogne<br/>1100–1118"]
+  rj3["3. Baudouin II du Bourg<br/>1118–1131"]
+  mel(["Mélisende"])
+  rj4["4. Foulques V d’Anjou<br/>1131–1143"]
+  rj5["5. Baudouin III<br/>1143–1162"]
+  rj6["6. Amaury Ier<br/>1162–1174"]
+  agn(["Agnès de Courtenay"])
+  syb(["Sibylle de Jérusalem"])
+  rj7["7. Baudouin IV le Lépreux<br/>1174–1185"]
+  gmo(["Guillaume de Montferrat"])
+  rj8["8. Baudouin V<br/>1185–1186"]
+  rj9["9–10. Guy de Lusignan<br/>1186–1192"]
+  rj11["11. Isabelle Ire<br/>1192–1205"]
+  rj12["12. Marie de Montferrat<br/>1205–1212"]
+  rj13["13. Jean de Brienne<br/>1212–1225"]
+  rj14["14. Isabelle II<br/>1225–1228"]
+  rj15["15. Frédéric II de Hohenstaufen<br/>1228–1232"]
+  rj16["16. Conrad IV<br/>1232–1254"]
+  eli(["Élisabeth de Bavière"])
+  rj17["17. Conradin<br/>1254–1268"]
+  rj18["18. Hugues III de Poitiers-Lusignan<br/>1269–1284"]
+  rj19["19. Jean Ier de Chypre<br/>1284–1285"]
+  rj20["20. Henri II de Poitiers-Lusignan<br/>1285–1291"]
+  rj1 ---|frères| rj2
+  rj2 -.-|cousins| rj3
+  rj3 --> mel
+  mel ===|époux| rj4
+  mel --> rj5
+  mel --> rj6
+  rj6 --> rj7
+  agn --> rj7
+  rj6 -.-> syb
+  agn -.-> syb
+  syb --> rj8
+  gmo --> rj8
+  syb ===|époux| rj9
+  rj6 --> rj11
+  rj11 --> rj12
+  rj12 ===|époux| rj13
+  rj12 --> rj14
+  rj13 --> rj14
+  rj14 ===|époux| rj15
+  rj14 --> rj16
+  rj15 --> rj16
+  rj16 --> rj17
+  eli --> rj17
+  rj11 -.->|descendance| rj18
+  rj18 -.-> rj19
+  rj18 -.-> rj20`,
+capetiens:`flowchart TD
+  roi1["1. Philippe Ier<br/>1060–1108"]
+  roi2["2. Louis VI le Gros<br/>1108–1137"]
+  roi3["3. Louis VII le Jeune<br/>1137–1180"]
+  roi4["4. Philippe II Auguste<br/>1180–1223"]
+  roi5["5. Louis VIII le Lion<br/>1223–1226"]
+  roi6["6. Louis IX — Saint Louis<br/>1226–1270"]
+  roi7["7. Philippe III le Hardi<br/>1270–1285"]
+  roi8["8. Philippe IV le Bel<br/>1285–1314"]
+  cr2(["2e croisade"])
+  cr3(["3e croisade"])
+  cr7(["7e croisade"])
+  cr8(["8e croisade — Tunis"])
+  evA(["13 octobre 1307<br/>Arrestation des Templiers"])
+  roi1 -->|fils| roi2
+  roi2 -->|fils| roi3
+  roi3 -->|fils| roi4
+  roi4 -->|fils| roi5
+  roi5 -->|fils| roi6
+  roi6 -->|fils| roi7
+  roi7 -->|fils| roi8
+  roi3 -.- cr2
+  roi4 -.- cr3
+  roi6 -.- cr7
+  roi6 -.- cr8
+  roi8 -.- evA`
+}
+};
+</script>
+
+<!-- =====================================================================
+     APPLICATION
+     ===================================================================== -->
+<script>
+(function(){
+"use strict";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const app=$("#app");
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+const ROM={11:"XIᵉ",12:"XIIᵉ",13:"XIIIᵉ",14:"XIVᵉ"};
+const Y0=1055, Y1=1320, YMIN=1060, YMAX=1314;
+
+function ty(s,end){
+  if(!s) return null;
+  const p=String(s).split("-").map(Number), y=p[0], m=p[1], d=p[2];
+  if(!m) return end? y+0.999 : y;
+  if(!d) return y+(m-1)/12+(end?1/12-0.002:0);
+  return y+(m-1)/12+(d-1)/365;
+}
+function fmt(s){
+  if(!s) return "";
+  const p=String(s).split("-").map(Number);
+  if(!p[1]) return String(p[0]);
+  if(!p[2]) return MOIS[p[1]-1]+" "+p[0];
+  return (p[2]===1?"1er":p[2])+" "+MOIS[p[1]-1]+" "+p[0];
+}
+
+const TYPES={
+  gm:{label:"Grand maître du Temple",plural:"Grands maîtres du Temple",short:"Grands maîtres"},
+  cr:{label:"Croisade",plural:"Croisades",short:"Croisades"},
+  roi:{label:"Roi capétien",plural:"Rois capétiens",short:"Rois de France"},
+  pape:{label:"Pape",plural:"Papes",short:"Papes"},
+  rj:{label:"Roi ou reine de Jérusalem",plural:"Rois et reines de Jérusalem et d’Acre",short:"Rois de Jérusalem"},
+  ev:{label:"Événement",plural:"Événements",short:"Événements"}
+};
+const ORDER=["gm","cr","roi","pape","rj"];
+const ALLT=["gm","cr","roi","pape","rj","ev"];
+
+const ALL=[], BY={}, PL={};
+DATA.places.forEach(p=>PL[p.id]=p);
+DATA.entries.forEach(e=>{ e.s=ty(e.start); e.e=e.end?ty(e.end,true):e.s+0.999; ALL.push(e); BY[e.id]=e; });
+DATA.events.forEach(v=>{ v.type="ev"; v.name=v.title; v.start=v.date; v.s=ty(v.date); v.e=v.s; ALL.push(v); BY[v.id]=v; });
+const SER={}; ALLT.forEach(t=>SER[t]=ALL.filter(x=>x.type===t).sort((a,b)=>a.s-b.s||(a.n||0)-(b.n||0)));
+
+const fullName=e=>e.name+(e.alias&&e.type!=="cr"?" « "+e.alias+" »":"");
+const period=e=> e.type==="ev"? fmt(e.date) : (e.start===e.end? fmt(e.start) : fmt(e.start)+" – "+fmt(e.end));
+const centuries=e=>{ const a=Math.floor((Math.floor(e.s)-1)/100)+1, b=Math.floor((Math.floor(e.e)-1)/100)+1; const r=[]; for(let c=a;c<=b;c++) r.push(c); return r; };
+function durOf(e){
+  if(e.dur) return e.dur;
+  if(e.type==="ev") return "";
+  const y=e.e-e.s; if(y>=1.5) return "≈ "+Math.round(y)+" ans"; return "moins de 2 ans";
+}
+const chip=e=>`<a class="chip t-${e.type}" href="#/fiche/${e.id}">${esc(e.n&&e.type!=="ev"&&e.type!=="cr"?e.n+". ":"")}${esc(e.name)}</a>`;
+const overlaps=(a,b)=> b.type==="ev"||a.type==="ev" ? (b.s>=a.s&&b.s<=a.e)||(a.s>=b.s&&a.s<=b.e) : (b.s<a.e && b.e>a.s);
+const relatedTo=e=>ALL.filter(x=>x!==e && ((x.links||[]).includes(e.id) || (e.links||[]).includes(x.id)));
+
+const state={year:1129, ppy: innerWidth<700?4:9, gen:"jerusalem", bl:new Set(["gm"])};
+const F={types:new Set(),sc:new Set(),q:"",origin:"",ordre:"",fr:false,tpl:false,sort:"date"};
+let timer=null, map=null, routeToken=0;
+
+/* ---------- thème ---------- */
+(function initTheme(){
+  try{ const t=localStorage.getItem("tpl-theme"); if(t) document.documentElement.dataset.theme=t; }catch(e){}
+  $("#theme").addEventListener("click",()=>{
+    const dark=isDark(); const t=dark?"light":"dark";
+    document.documentElement.dataset.theme=t;
+    try{localStorage.setItem("tpl-theme",t);}catch(e){}
+    route();
+  });
+})();
+function isDark(){ const t=document.documentElement.dataset.theme; if(t) return t==="dark"; return matchMedia("(prefers-color-scheme: dark)").matches; }
+const cssVar=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- recherche globale ---------- */
+(function initSearch(){
+  const q=$("#q"), res=$("#qres"); let sel=0, items=[];
+  function run(){
+    const v=norm(q.value.trim());
+    if(v.length<2){ res.classList.remove("open"); return; }
+    items=[];
+    ALL.forEach(e=>{ const h=norm([e.name,e.alias,e.civil,e.origin,e.originDetail,e.leaders].join(" ")); if(h.includes(v)) items.push({href:"#/fiche/"+e.id,t:e.type,label:e.name+(e.alias?" — "+e.alias:""),sub:TYPES[e.type].label+(e.type==="ev"?" · "+fmt(e.date):"")}); });
+    DATA.places.forEach(p=>{ if(norm(p.name).includes(v)) items.push({href:"#/carte/"+p.id,t:"ev",label:p.name,sub:"Lieu"}); });
+    DATA.founders.forEach(f=>{ if(!f.id && norm(f.name).includes(v)) items.push({href:"#/",t:"gm",label:f.name,sub:"L’un des neuf premiers chevaliers"}); });
+    items=items.slice(0,12); sel=0;
+    res.innerHTML= items.length? items.map((it,i)=>`<a href="${it.href}" class="t-${it.t} ${i===0?"sel":""}"><span class="dot"></span>${esc(it.label)}<small>${esc(it.sub)}</small></a>`).join("") : `<div class="none">Aucun résultat</div>`;
+    res.classList.add("open");
+  }
+  q.addEventListener("input",run);
+  q.addEventListener("focus",run);
+  q.addEventListener("keydown",ev=>{
+    const links=$$("a",res);
+    if(ev.key==="ArrowDown"||ev.key==="ArrowUp"){ ev.preventDefault(); if(!links.length) return; sel=(sel+(ev.key==="ArrowDown"?1:-1)+links.length)%links.length; links.forEach((a,i)=>a.classList.toggle("sel",i===sel)); }
+    else if(ev.key==="Enter"){ if(links[sel]){ location.hash=links[sel].getAttribute("href"); close(); } }
+    else if(ev.key==="Escape"){ close(); }
+  });
+  res.addEventListener("click",()=>setTimeout(close,0));
+  document.addEventListener("click",ev=>{ if(!ev.target.closest(".search")) res.classList.remove("open"); });
+  function close(){ res.classList.remove("open"); q.value=""; q.blur(); }
+})();
+
+/* ---------- routeur ---------- */
+function route(){
+  routeToken++;
+  if(timer){ clearInterval(timer); timer=null; }
+  if(map){ map.remove(); map=null; }
+  const raw=location.hash.replace(/^#\/?/,""); const parts=raw.split("/").filter(Boolean).map(decodeURIComponent);
+  const v=parts[0]||"accueil";
+  $$("#tabs a").forEach(a=>a.classList.toggle("on",a.dataset.v===v || (v==="fiche"&&a.dataset.v==="liste")));
+  const fn={accueil:renderHome,frise:renderFrise,annee:renderAnnee,liste:renderListe,fiche:renderFiche,carte:renderCarte,genealogie:renderGen,blasons:renderBlasons,apropos:renderAbout}[v]||renderHome;
+  fn(parts[1]);
+  window.scrollTo(0,0);
+  document.title=(v==="fiche"&&BY[parts[1]]? BY[parts[1]].name+" — ":"")+"Les Templiers — Tableau synoptique";
+}
+window.addEventListener("hashchange",route);
+document.addEventListener("keydown",ev=>{
+  if(ev.target.closest("input,select,textarea")) return;
+  const a= ev.key==="ArrowLeft"? $(".pn .pv") : ev.key==="ArrowRight"? $(".pn .nx") : null;
+  if(a) location.hash=a.getAttribute("href");
+});
+
+const CROSS=`<svg class="cross" viewBox="0 0 100 100" aria-hidden="true"><path d="M44 44L30 4h40L56 44 96 30v40L56 56l14 40H30l14-40L4 70V30z" fill="#b3202a"/></svg>`;
+
+/* ---------- accueil ---------- */
+function renderHome(){
+  const stats=[["cr",SER.cr.filter(c=>c.ts).length,"croisades en Terre sainte"],["roi",8,"rois capétiens en 254 ans"],["pape",37,"papes en 226 ans"],["gm",23,"grands maîtres en 194 ans"],["rj",20,"rois de Jérusalem en 192 ans"]];
+  const evs=SER.ev.filter(e=>!["ev-chute"].includes(e.id));
+  app.innerHTML=`
+  <section class="hero">${CROSS}
+    <h1>${esc(DATA.meta.titre)}</h1>
+    <p class="devise">« ${esc(DATA.meta.devise)} »</p>
+    <p class="lead" style="margin:0 auto">Deux siècles d’histoire de l’Ordre du Temple mis en regard des croisades, des rois de France, des papes et des rois de Jérusalem.</p>
+    <div class="ctas"><a class="btn pri" href="#/frise">Explorer la frise</a><a class="btn" href="#/annee">Remonter le temps</a><a class="btn" href="#/carte">Voir la carte</a></div>
+  </section>
+  <section class="wrap" style="padding-top:8px">
+    <div class="stats">${stats.map(([t,n,l])=>`<a class="stat t-${t}" href="#/liste/${t}"><b>${n}</b><span>${l}</span></a>`).join("")}</div>
+    <div class="two" style="margin-top:28px">
+      <div class="panel"><h2>Les neuf premiers chevaliers</h2>
+        <p>Ils restent neuf années dans les anciennes écuries du Temple de Salomon à Jérusalem.</p>
+        <ol class="founders">${DATA.founders.map(f=>`<li>${f.id?`<a href="#/fiche/${f.id}">${esc(f.name)}</a>`:esc(f.name)}</li>`).join("")}</ol>
+        <p class="src" style="margin-top:10px">Ils furent rejoints par le comte de Champagne à la fin de 1126.</p>
+      </div>
+      <div class="panel"><h2>Repères</h2>
+        <ul class="tl">${evs.map(e=>`<li><a href="#/fiche/${e.id}"><time>${esc(fmt(e.date))}</time><b>${esc(e.title)}</b></a></li>`).join("")}</ul>
+      </div>
+    </div>
+    <div class="panel curse"><h2>1314, l’année des trois morts</h2>
+      <p>Selon la tradition reprise par Maurice Druon dans <i>Les Rois maudits</i>, Jacques de Molay aurait, sur son bûcher, cité le pape et le roi à comparaître devant le tribunal de Dieu avant un an. Les trois protagonistes meurent la même année.</p>
+      <div class="three">
+        <a href="#/fiche/gm23" class="t-gm"><b>1 · 18 mars 1314</b>Jacques de Molay, sur le bûcher</a>
+        <a href="#/fiche/p37" class="t-pape"><b>2 · 20 avril 1314</b>Le pape Clément V</a>
+        <a href="#/fiche/roi8" class="t-roi"><b>3 · 29 novembre 1314</b>Le roi Philippe IV le Bel</a>
+      </div>
+    </div>
+  </section>`;
+}
+
+/* ---------- année par année ---------- */
+function atYear(y){
+  const r={}; ORDER.forEach(t=>r[t]=SER[t].filter(x=>x.s<y+1 && x.e>=y));
+  r.ev=SER.ev.filter(x=>Math.floor(x.s)===y); return r;
+}
+function yearPanel(y){
+  const r=atYear(y);
+  const empty={gm:"Pas de grand maître (Ordre non fondé ou vacance)",cr:"Aucune croisade en cours",roi:"—",pape:"Siège vacant",rj:"Pas de roi (royaume non fondé ou disparu)",ev:"Aucun événement noté"};
+  return `<div class="ypanel">${ALLT.map(t=>`<div class="ycol t-${t}"><h4>${TYPES[t].short}</h4>${r[t].length? r[t].map(e=>`<a class="ycard" href="#/fiche/${e.id}"><b>${esc(e.n&&t!=="cr"&&t!=="ev"?e.n+". ":"")}${esc(fullName(e))}</b><span>${esc(period(e))}</span></a>`).join(""):`<p class="none">${empty[t]}</p>`}</div>`).join("")}</div>`;
+}
+function renderAnnee(){
+  const jumps=[[1096,"1re croisade"],[1099,"Prise de Jérusalem"],[1129,"Concile de Troyes"],[1187,"Chute de Jérusalem"],[1244,"Montségur"],[1291,"Chute d’Acre"],[1307,"Arrestation"],[1312,"Dissolution"],[1314,"1314"]];
+  app.innerHTML=`<section class="wrap"><h1>Année par année</h1>
+   <p class="lead">Choisissez une année : le site affiche qui dirigeait l’Ordre, la France, l’Église et le royaume de Jérusalem, et ce qui s’est passé.</p>
+   <div class="yctrl"><button data-d="-10" aria-label="Moins 10 ans">«</button><button data-d="-1" aria-label="Année précédente">‹</button><output id="yv">${state.year}</output><button data-d="1" aria-label="Année suivante">›</button><button data-d="10" aria-label="Plus 10 ans">»</button><button id="play">▶ Lecture</button></div>
+   <input type="range" id="yr" min="${YMIN}" max="${YMAX}" value="${state.year}" aria-label="Année">
+   <div class="jumps">${jumps.map(([y,l])=>`<button class="fchip" data-y="${y}">${y} · ${l}</button>`).join("")}</div>
+   <div id="yp"></div></section>`;
+  const set=y=>{ state.year=Math.max(YMIN,Math.min(YMAX,y)); $("#yv").textContent=state.year; $("#yr").value=state.year; $("#yp").innerHTML=yearPanel(state.year); };
+  set(state.year);
+  $("#yr").addEventListener("input",e=>set(+e.target.value));
+  $$(".yctrl [data-d]").forEach(b=>b.addEventListener("click",()=>set(state.year+ +b.dataset.d)));
+  $$(".jumps [data-y]").forEach(b=>b.addEventListener("click",()=>set(+b.dataset.y)));
+  $("#play").addEventListener("click",function(){
+    if(timer){ clearInterval(timer); timer=null; this.textContent="▶ Lecture"; return; }
+    if(state.year>=YMAX) set(YMIN);
+    this.textContent="❚❚ Pause";
+    timer=setInterval(()=>{ if(state.year>=YMAX){ clearInterval(timer); timer=null; $("#play").textContent="▶ Lecture"; return; } set(state.year+1); },550);
+  });
+}
+
+/* ---------- frise ---------- */
+function renderFrise(){
+  app.innerHTML=`<section class="wrap"><h1>Frise synoptique</h1>
+   <p class="lead">Les six colonnes du tableau, alignées sur le temps. Cliquez sur une barre pour ouvrir la fiche, ou sur le fond pour choisir une année.</p>
+   <div class="fctrl"><div class="seg"><button id="zout" aria-label="Dézoomer">−</button><button id="zin" aria-label="Zoomer">+</button></div>
+   <span>Année sélectionnée : <b id="fy">${state.year}</b></span></div>
+   <div class="frise"><div class="flabels" id="fl"></div><div class="fscroll" id="fs"></div></div>
+   <h2>En <span id="fy2">${state.year}</span></h2><div id="fyp"></div></section>`;
+  drawFrise(true);
+  $("#zin").onclick=()=>zoom(1); $("#zout").onclick=()=>zoom(-1);
+}
+const ZOOMS=[2,3,4,6,9,14,20];
+function zoom(d){
+  const fs=$("#fs"); const center=Y0+(fs.scrollLeft+fs.clientWidth/2)/state.ppy;
+  let i=ZOOMS.indexOf(state.ppy); if(i<0) i=3; i=Math.max(0,Math.min(ZOOMS.length-1,i+d)); state.ppy=ZOOMS[i];
+  drawFrise(false); fs.scrollLeft=(center-Y0)*state.ppy-fs.clientWidth/2;
+}
+function drawFrise(scroll){
+  const ppy=state.ppy, W=Math.round((Y1-Y0)*ppy), rowH=24, gap=4, pad=8, axisH=26;
+  let y=axisH, bars="", bgs="", labels="";
+  const X=v=>(v-Y0)*ppy;
+  ALLT.forEach((k,li)=>{
+    const rows=[];
+    SER[k].forEach(it=>{
+      const x1=X(it.s), x2= k==="ev"? x1+18 : Math.max(x1+4, X(it.e));
+      // colonnes successives (grands maîtres, rois, papes) : une seule ligne
+      let r= (k==="cr"||k==="ev") ? rows.findIndex(end=>end<=x1-1) : (rows.length?0:-1);
+      if(r<0){ r=rows.length; rows.push(0); }
+      rows[r]=x2; it._r=r; it._x1=x1; it._x2=x2;
+    });
+    const n=Math.max(1,rows.length), h=pad*2+n*rowH+(n-1)*gap;
+    bgs+=`<rect class="lb ${li%2?"odd":""}" x="0" y="${y}" width="${W}" height="${h}"/>`;
+    labels+=`<div class="t-${k}" style="top:${y}px;height:${h}px"><span class="dot"></span>${TYPES[k].short}</div>`;
+    SER[k].forEach(it=>{
+      const ry=y+pad+it._r*(rowH+gap);
+      const tip=esc(fullName(it))+" — "+esc(period(it));
+      if(k==="ev"){
+        const cx=it._x1, cy=ry+rowH/2;
+        bars+=`<g class="fb t-ev" data-id="${it.id}"><title>${tip}</title><path d="M${cx} ${cy-9}L${cx+9} ${cy}L${cx} ${cy+9}L${cx-9} ${cy}Z"/></g>`;
+      } else {
+        const w=it._x2-it._x1; const lab=(it.n&&k!=="cr"?it.n+". ":"")+it.name; const max=Math.floor((w-8)/6.3);
+        const txt= max>=4 ? (lab.length>max? lab.slice(0,max-1)+"…" : lab) : "";
+        bars+=`<g class="fb t-${k}" data-id="${it.id}"><title>${tip}</title><rect x="${it._x1.toFixed(1)}" y="${ry}" width="${w.toFixed(1)}" height="${rowH}" rx="4"/>${txt?`<text x="${(it._x1+5).toFixed(1)}" y="${ry+rowH/2+4}">${esc(txt)}</text>`:""}</g>`;
+      }
+    });
+    y+=h;
+  });
+  const H=y+6; let grid="";
+  const step= ppy>=9?5:ppy>=4?10:20, lstep= ppy>=14?10:ppy>=6?20:ppy>=3?50:50;
+  for(let yr=Math.ceil(Y0/step)*step; yr<=Y1; yr+=step){
+    const x=X(yr); grid+=`<line class="gl" x1="${x}" x2="${x}" y1="${axisH-6}" y2="${H}" ${yr%lstep?'stroke-dasharray="2 4"':""}/>`;
+    if(yr%lstep===0) grid+=`<text class="ax" x="${x+3}" y="16">${yr}</text>`;
+  }
+  const cx=X(state.year+0.5);
+  $("#fs").innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Frise chronologique">${bgs}${grid}${bars}<line id="cur" class="cur" x1="${cx}" x2="${cx}" y1="${axisH-6}" y2="${H}"/></svg>`;
+  $("#fl").style.height=H+"px"; $("#fl").innerHTML=labels;
+  const fs=$("#fs"), svg=$("#fs svg");
+  svg.addEventListener("click",ev=>{
+    const g=ev.target.closest(".fb"); if(g){ location.hash="#/fiche/"+g.dataset.id; return; }
+    const r=svg.getBoundingClientRect(); const yr=Math.floor(Y0+(ev.clientX-r.left)/ppy);
+    setFriseYear(Math.max(YMIN,Math.min(YMAX,yr)));
+  });
+  if(scroll) fs.scrollLeft=X(state.year)-fs.clientWidth/2;
+  setFriseYear(state.year);
+}
+function setFriseYear(y){
+  state.year=y; const x=(y+0.5-Y0)*state.ppy; const c=$("#cur"); if(c){ c.setAttribute("x1",x); c.setAttribute("x2",x); }
+  $("#fy").textContent=y; $("#fy2").textContent=y; $("#fyp").innerHTML=yearPanel(y);
+}
+
+/* ---------- index / liste ---------- */
+function renderListe(preset){
+  if(preset && TYPES[preset]){ F.types=new Set([preset]); F.sc.clear(); F.q=""; F.origin=""; F.ordre=""; F.fr=false; F.tpl=false; }
+  const origins=[...new Set(SER.gm.map(e=>e.origin).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fr"));
+  const ordres=[...new Set(SER.pape.map(e=>e.ordre).filter(Boolean))].sort();
+  app.innerHTML=`<section class="wrap"><h1>Index</h1>
+   <p class="lead">Grands maîtres, croisades, rois, papes et événements : filtrez, triez, puis ouvrez une fiche.</p>
+   <div class="filters">
+    <input id="fq" type="search" placeholder="Filtrer : nom, origine, mot-clé…" value="${esc(F.q)}">
+    <div class="chips" id="ft">${ALLT.map(t=>`<button class="fchip t-${t} ${F.types.has(t)?"on":""}" data-t="${t}"><i></i>${TYPES[t].short} <small>${SER[t].length}</small></button>`).join("")}</div>
+    <div class="chips" id="fc2">${[11,12,13,14].map(c=>`<button class="fchip ${F.sc.has(c)?"on":""}" data-c="${c}">${ROM[c]} siècle</button>`).join("")}</div>
+    <div class="row">
+     <select id="fo" aria-label="Origine"><option value="">Origine des grands maîtres</option>${origins.map(o=>`<option ${F.origin===o?"selected":""}>${esc(o)}</option>`).join("")}</select>
+     <select id="fr" aria-label="Ordre religieux"><option value="">Ordre religieux des papes</option>${ordres.map(o=>`<option ${F.ordre===o?"selected":""}>${esc(o)}</option>`).join("")}</select>
+     <label class="tog"><input type="checkbox" id="ffr" ${F.fr?"checked":""}> Papes français</label>
+     <label class="tog"><input type="checkbox" id="ftp" ${F.tpl?"checked":""}> Liés directement à l’Ordre</label>
+     <select id="fsort" aria-label="Tri"><option value="date">Tri chronologique</option><option value="name">Tri alphabétique</option><option value="dur">Durée décroissante</option></select>
+     <button id="freset" class="lnk">Réinitialiser</button>
+    </div>
+   </div>
+   <p class="count" id="fcount"></p><div class="grid" id="fg"></div></section>`;
+  $("#fsort").value=F.sort;
+  const upd=()=>drawList();
+  $("#fq").addEventListener("input",e=>{F.q=e.target.value;upd();});
+  $$("#ft [data-t]").forEach(b=>b.addEventListener("click",()=>{ const t=b.dataset.t; F.types.has(t)?F.types.delete(t):F.types.add(t); b.classList.toggle("on"); upd(); }));
+  $$("#fc2 [data-c]").forEach(b=>b.addEventListener("click",()=>{ const c=+b.dataset.c; F.sc.has(c)?F.sc.delete(c):F.sc.add(c); b.classList.toggle("on"); upd(); }));
+  $("#fo").addEventListener("change",e=>{F.origin=e.target.value;upd();});
+  $("#fr").addEventListener("change",e=>{F.ordre=e.target.value;upd();});
+  $("#ffr").addEventListener("change",e=>{F.fr=e.target.checked;upd();});
+  $("#ftp").addEventListener("change",e=>{F.tpl=e.target.checked;upd();});
+  $("#fsort").addEventListener("change",e=>{F.sort=e.target.value;upd();});
+  $("#freset").addEventListener("click",()=>{ F.types.clear();F.sc.clear();F.q="";F.origin="";F.ordre="";F.fr=false;F.tpl=false;F.sort="date"; location.hash="#/liste"; renderListe(); });
+  drawList();
+}
+function sub(e){
+  switch(e.type){
+    case "gm": return [e.origin+(e.originDetail?" ("+e.originDetail+")":""), durOf(e)].filter(Boolean).join(" · ");
+    case "pape": return [e.civil, e.fr?"Pape français":"", e.ordre].filter(Boolean).join(" · ");
+    case "roi": return [e.alias?"« "+e.alias+" »":"", durOf(e)].filter(Boolean).join(" · ");
+    case "rj": return [e.alias, e.notes&&e.notes[0]].filter(Boolean).join(" · ");
+    case "cr": return [e.alias, e.leaders, e.ts===false?"Hors Terre sainte":""].filter(Boolean).join(" · ");
+    case "ev": return e.text;
+  }
+  return "";
+}
+function drawList(){
+  const q=norm(F.q.trim());
+  let L=ALL.filter(e=>{
+    if(F.types.size && !F.types.has(e.type)) return false;
+    if(F.sc.size && !centuries(e).some(c=>F.sc.has(c))) return false;
+    if(F.origin && !(e.type==="gm"&&e.origin===F.origin)) return false;
+    if(F.ordre && !(e.type==="pape"&&e.ordre===F.ordre)) return false;
+    if(F.fr && !(e.type==="pape"&&e.fr)) return false;
+    if(F.tpl && !(e.type==="gm"||(e.tags||[]).includes("templiers")||(e.links||[]).some(l=>l.startsWith("gm")))) return false;
+    if(q){ const h=norm([e.name,e.alias,e.civil,e.origin,e.originDetail,e.ordre,e.leaders,e.text,(e.notes||[]).join(" "),TYPES[e.type].label].join(" ")); if(!q.split(/\s+/).every(w=>h.includes(w))) return false; }
+    return true;
+  });
+  const dy=e=>e.e-e.s;
+  L.sort(F.sort==="name"? (a,b)=>a.name.localeCompare(b.name,"fr") : F.sort==="dur"? (a,b)=>dy(b)-dy(a) : (a,b)=>a.s-b.s || ALLT.indexOf(a.type)-ALLT.indexOf(b.type));
+  $("#fcount").textContent=L.length+" résultat"+(L.length>1?"s":"");
+  $("#fg").innerHTML=L.map(e=>`<a class="card t-${e.type}" href="#/fiche/${e.id}"><div class="ct"><span class="badge">${TYPES[e.type].label}</span>${e.n&&e.type!=="ev"?`<span class="num">${e.n}</span>`:""}</div><h3>${esc(e.name)}</h3><p class="cd">${esc(period(e))}</p>${sub(e)?`<p class="cs">${esc(sub(e))}</p>`:""}</a>`).join("") || `<p class="none">Aucun résultat avec ces filtres.</p>`;
+}
+
+/* ---------- fiche ---------- */
+function renderFiche(id){
+  const e=BY[id]; if(!e){ app.innerHTML=`<section class="wrap"><h1>Fiche introuvable</h1><p><a href="#/liste">Retour à l’index</a></p></section>`; return; }
+  const ser=SER[e.type], i=ser.indexOf(e), prev=ser[i-1], next=ser[i+1];
+  const facts=[];
+  if(e.type==="ev") facts.push(["Date",fmt(e.date)]);
+  else { facts.push(["Période",period(e)]); if(durOf(e)) facts.push(["Durée",durOf(e)]); }
+  if(e.origin) facts.push(["Origine",e.origin+(e.originDetail?" — "+e.originDetail:"")]);
+  if(e.civil) facts.push(["Nom",e.civil]);
+  if(e.ordre) facts.push(["Ordre religieux",e.ordre]);
+  if(e.fr) facts.push(["Nationalité","Pape français"]);
+  if(e.leaders) facts.push(["Conduite par",e.leaders]);
+  if(e.type==="cr") facts.push(["Théâtre",e.ts===false?"Hors Terre sainte":"Terre sainte"]);
+  if(e.capital) facts.push(["Capitale",e.capital]);
+  const places=[e.place].concat(e.places||[]).filter(Boolean).map(p=>PL[p]).filter(Boolean);
+  if(places.length) facts.push(["Lieu",places.map(p=>`<a href="#/carte/${p.id}">${esc(p.name)}</a>`).join(", "),true]);
+  const notes=(e.notes||[]).concat(e.text?[e.text]:[]);
+
+  const contemp=ORDER.filter(t=>t!==e.type).map(t=>({t,list:SER[t].filter(x=>overlaps(e,x))})).filter(g=>g.list.length);
+  const rel=relatedTo(e);
+  const evs=e.type==="ev"?[]:SER.ev.filter(v=>overlaps(e,v)&&!rel.includes(v));
+  const inGen= e.type==="rj"?"jerusalem": e.type==="roi"?"capetiens":null;
+
+  app.innerHTML=`<section class="wrap">
+   <div class="crumb"><a href="#/liste/${e.type}">${TYPES[e.type].plural}</a>${e.n&&e.type!=="ev"?` › n° ${e.n}`:""}</div>
+   <div class="fhead t-${e.type}"><span class="badge">${TYPES[e.type].label}${e.n&&e.type!=="ev"?" n° "+e.n:""}</span>
+    <h1>${esc(e.name)}</h1>${e.alias?`<div class="alias">${esc(e.alias)}</div>`:""}</div>
+   <div class="fgrid">
+    <div>
+     <dl class="facts">${facts.map(([k,v,html])=>`<dt>${k}</dt><dd>${html?v:esc(v)}</dd>`).join("")}</dl>
+     ${notes.length?`<div class="notes">${notes.map(n=>`<p>${esc(n)}</p>`).join("")}</div>`:""}
+     ${rel.length?`<div class="ctg"><h4>En lien direct</h4><div class="chips">${rel.map(chip).join("")}</div></div>`:""}
+     ${contemp.length?`<h2>${e.type==="ev"?"En fonction à cette date":"Contemporains"}</h2>${contemp.map(g=>`<div class="ctg t-${g.t}"><h4>${TYPES[g.t].plural}</h4><div class="chips">${g.list.map(chip).join("")}</div></div>`).join("")}`:""}
+     ${evs.length?`<div class="ctg t-ev"><h4>Événements pendant cette période</h4><div class="chips">${evs.map(chip).join("")}</div></div>`:""}
+     <p style="margin-top:16px"><a class="btn" href="#/annee" onclick="void 0" data-y="${Math.floor(e.s)}" id="goY">Voir l’année ${Math.floor(e.s)}</a> ${inGen?`<a class="btn" href="#/genealogie/${inGen}">Arbre généalogique</a>`:""}</p>
+    </div>
+    <aside class="panel wiki" id="wk">${e.wiki?`<p class="none">Recherche d’informations sur Wikipédia…</p>`:wikiLinks(e)}</aside>
+   </div>
+   <div class="pn">${prev?`<a class="pv t-${prev.type}" href="#/fiche/${prev.id}"><small>← Précédent</small>${esc(prev.name)}</a>`:"<span></span>"}${next?`<a class="nx t-${next.type}" href="#/fiche/${next.id}"><small>Suivant →</small>${esc(next.name)}</a>`:"<span></span>"}</div>
+  </section>`;
+  $("#goY").addEventListener("click",()=>{ state.year=Math.max(YMIN,Math.min(YMAX,Math.floor(e.s))); });
+  if(e.wiki) loadWiki(e, routeToken);
+}
+const commonsSearch=e=>"https://commons.wikimedia.org/w/index.php?search="+encodeURIComponent("blason "+e.name);
+const wpSearch=e=>"https://fr.wikipedia.org/w/index.php?search="+encodeURIComponent(e.wiki||e.name);
+function wikiLinks(e,url){
+  return `<h3>Pour aller plus loin</h3><div class="links">
+    <a href="${url||wpSearch(e)}" target="_blank" rel="noopener">${url?"Lire l’article sur Wikipédia":"Chercher sur Wikipédia"} ↗</a>
+    ${e.type!=="ev"&&e.type!=="cr"?`<a href="${commonsSearch(e)}" target="_blank" rel="noopener">Chercher un blason sur Wikimedia Commons ↗</a>`:""}
+    ${e.type==="gm"||e.type==="roi"||e.type==="rj"?`<a href="https://gw.geneanet.org/?lang=fr&n=${encodeURIComponent(e.name)}" target="_blank" rel="noopener">Rechercher sur Geneanet ↗</a>`:""}
+  </div>`;
+}
+async function loadWiki(e,tok){
+  const box=$("#wk");
+  try{
+    await wikiBatch([e]);
+    const w=WK[e.id]; if(tok!==routeToken) return;
+    if(!w||w.miss){ box.innerHTML=wikiLinks(e); return; }
+    let sum=null;
+    try{ const r=await fetch("https://fr.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(w.t.replace(/ /g,"_"))); if(r.ok) sum=await r.json(); }catch(x){}
+    if(tok!==routeToken) return;
+    const url=sum&&sum.content_urls?sum.content_urls.desktop.page:"https://fr.wikipedia.org/wiki/"+encodeURIComponent(w.t.replace(/ /g,"_"));
+    const img=(sum&&sum.thumbnail&&sum.thumbnail.source)||w.img;
+    box.innerHTML=`<div class="imgs">${img?`<figure><img src="${esc(img)}" alt="Illustration : ${esc(e.name)}" loading="lazy"><figcaption>Illustration</figcaption></figure>`:""}${w.bl?`<figure><img src="${esc(blasonUrl(w.bl,220))}" alt="Blason : ${esc(e.name)}" loading="lazy"><figcaption>Blason</figcaption></figure>`:""}</div>
+      ${sum&&sum.extract?`<p>${esc(sum.extract)}</p><p class="src">Extrait : Wikipédia (CC BY-SA)</p>`:""}${wikiLinks(e,url)}`;
+  }catch(err){ if(tok===routeToken) box.innerHTML=wikiLinks(e); }
+}
+
+/* ---------- Wikipédia / Wikidata (cache local) ---------- */
+let WK={}; try{ WK=JSON.parse(localStorage.getItem("tpl-wk-1"))||{}; }catch(e){ WK={}; }
+const saveWK=()=>{ try{ localStorage.setItem("tpl-wk-1",JSON.stringify(WK)); }catch(e){} };
+const blasonUrl=(f,w)=>"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(f.replace(/ /g,"_"))+"?width="+w;
+async function wikiBatch(list){
+  const todo=list.filter(e=>e.wiki && !WK[e.id]);
+  for(let i=0;i<todo.length;i+=40){
+    const ch=todo.slice(i,i+40);
+    const u="https://fr.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&redirects=1&prop=pageprops%7Cpageimages&ppprop=wikibase_item%7Cdisambiguation&piprop=thumbnail&pithumbsize=240&titles="+encodeURIComponent(ch.map(e=>e.wiki).join("|"));
+    const j=await (await fetch(u)).json();
+    const nm={}, rd={}, pg={};
+    (j.query.normalized||[]).forEach(n=>nm[n.from]=n.to);
+    (j.query.redirects||[]).forEach(n=>rd[n.from]=n.to);
+    (j.query.pages||[]).forEach(p=>pg[p.title]=p);
+    ch.forEach(e=>{ let t=nm[e.wiki]||e.wiki; t=rd[t]||t; const p=pg[t];
+      if(!p||p.missing||p.invalid||(p.pageprops&&"disambiguation" in p.pageprops)) WK[e.id]={miss:1};
+      else WK[e.id]={t:p.title,q:p.pageprops&&p.pageprops.wikibase_item,img:p.thumbnail&&p.thumbnail.source};
+    });
+  }
+  const need=list.map(e=>WK[e.id]).filter(w=>w&&w.q&&w.bl===undefined);
+  if(need.length){
+    const qs=[...new Set(need.map(w=>w.q))];
+    const sparql="SELECT ?i ?a WHERE { VALUES ?i { "+qs.map(q=>"wd:"+q).join(" ")+" } OPTIONAL { ?i wdt:P94 ?a } }";
+    try{
+      const r=await fetch("https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(sparql),{headers:{Accept:"application/sparql-results+json"}});
+      const j=await r.json(); const m={};
+      j.results.bindings.forEach(b=>{ const q=b.i.value.split("/").pop(); if(b.a&&!m[q]) m[q]=decodeURIComponent(b.a.value.split("/Special:FilePath/").pop()); });
+      need.forEach(w=>{ w.bl=m[w.q]||null; });
+    }catch(x){ /* blasons indisponibles */ }
+  }
+  saveWK();
+}
+
+/* ---------- carte ---------- */
+function renderCarte(focus){
+  app.innerHTML=`<section class="wrap"><h1>Carte</h1>
+   <p class="lead">Origines des grands maîtres et lieux marquants de l’histoire de l’Ordre. Cliquez sur un point pour accéder aux fiches.</p>
+   <div class="fctrl"><div class="seg" id="mv"><button data-v="fr">France</button><button data-v="or">Orient latin</button><button data-v="all">Tout</button></div>
+   <span class="legend"><span><span class="dot t-gm"></span> Origine d’un grand maître</span><span><span class="dot t-ev"></span> Lieu d’histoire</span></span></div>
+   <div id="map"></div>
+   <p class="note">Les origines connues seulement à l’échelle d’une région sont placées approximativement (cercle en pointillé). Thomas Béraud (Italie ou Angleterre) n’est pas localisé.</p></section>`;
+  if(typeof L==="undefined"){ $("#map").innerHTML=`<p class="none" style="padding:20px">La carte n’a pas pu être chargée (connexion requise).</p>`; return; }
+  map=L.map("map",{scrollWheelZoom:false,worldCopyJump:true});
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{attribution:"© OpenStreetMap © CARTO",subdomains:"abcd",maxZoom:18}).addTo(map);
+  const cGm=cssVar("--gm"), cEv=cssVar("--ev");
+  const gO=L.layerGroup().addTo(map), gL=L.layerGroup().addTo(map), mk={};
+  DATA.places.forEach(p=>{
+    const rel=ALL.filter(x=>x.place===p.id||(x.places||[]).includes(p.id));
+    const isO=rel.some(x=>x.type==="gm"&&x.place===p.id);
+    const col=isO?cGm:cEv;
+    const m=L.circleMarker([p.lat,p.lng],{radius:isO?8:9,color:col,weight:2,fillColor:col,fillOpacity:p.approx?.25:.75,dashArray:p.approx?"4 3":null});
+    m.bindPopup(`<b>${esc(p.name)}</b>${p.desc?`<p style="margin:.4em 0 0">${esc(p.desc)}</p>`:""}${rel.length?`<div class="chips">${rel.map(chip).join("")}</div>`:""}`);
+    m.addTo(isO?gO:gL); mk[p.id]=m;
+  });
+  L.control.layers(null,{"Origines des grands maîtres":gO,"Lieux d’histoire":gL},{collapsed:true}).addTo(map);
+  const V={fr:[[42.2,-2.5],[51.6,8.5]],or:[[30.5,8],[42.5,36.5]],all:[[30,-3],[52,37]]};
+  const go=v=>{ map.fitBounds(V[v]); $$("#mv button").forEach(b=>b.classList.toggle("on",b.dataset.v===v)); };
+  $$("#mv button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.v)));
+  if(focus&&mk[focus]){ map.setView(mk[focus].getLatLng(),7); mk[focus].openPopup(); } else go("fr");
+}
+
+/* ---------- généalogies ---------- */
+let mmInit=false, mmN=0;
+function renderGen(which){
+  if(which&&DATA.genealogies[which]) state.gen=which;
+  app.innerHTML=`<section class="wrap"><h1>Généalogies</h1>
+   <p class="lead">Liens familiaux tels que décrits dans le tableau. Cliquez sur un souverain pour ouvrir sa fiche. Traits pleins : filiations et alliances ; pointillés : liens indirects ou complétés.</p>
+   <div class="fctrl"><div class="seg" id="gs"><button data-g="jerusalem">Rois de Jérusalem</button><button data-g="capetiens">Capétiens</button></div></div>
+   <div class="mm" id="mm"><p class="none">Construction de l’arbre…</p></div></section>`;
+  $$("#gs button").forEach(b=>{ b.classList.toggle("on",b.dataset.g===state.gen); b.addEventListener("click",()=>{ location.hash="#/genealogie/"+b.dataset.g; }); });
+  drawGen(routeToken);
+}
+async function drawGen(tok){
+  const box=$("#mm");
+  if(typeof mermaid==="undefined"){ box.innerHTML=`<p class="none">L’arbre n’a pas pu être chargé (connexion requise).</p>`; return; }
+  const d=isDark();
+  const pal={ink:cssVar("--ink"),line:cssVar("--muted"),card:cssVar("--card")};
+  mermaid.initialize({startOnLoad:false,securityLevel:"loose",theme:"base",flowchart:{useMaxWidth:false,htmlLabels:true,curve:"basis"},
+    themeVariables:{fontFamily:"EB Garamond, Georgia, serif",fontSize:"15px",primaryColor:pal.card,primaryTextColor:pal.ink,primaryBorderColor:pal.line,lineColor:pal.line,edgeLabelBackground:d?"#1d1812":"#fffdf7",tertiaryColor:pal.card}});
+  const colOf=t=>({rj:cssVar("--rj"),roi:cssVar("--roi"),cr:cssVar("--cr"),ev:cssVar("--ev")}[t]);
+  let code=DATA.genealogies[state.gen];
+  const ids=[...code.matchAll(/^\s*([a-zA-Z][\w-]*)[\[\(]/gm)].map(m=>m[1]);
+  const real=ids.filter(i=>BY[i]);
+  const fill=c=>d?"#1d1812":"#fffdf7";
+  code+="\n  classDef rj fill:"+fill()+",stroke:"+colOf("rj")+",stroke-width:2px,color:"+pal.ink;
+  code+="\n  classDef roi fill:"+fill()+",stroke:"+colOf("roi")+",stroke-width:2px,color:"+pal.ink;
+  code+="\n  classDef cr fill:"+fill()+",stroke:"+colOf("cr")+",stroke-width:1.5px,color:"+pal.ink+",stroke-dasharray:4 3";
+  code+="\n  classDef ext fill:"+(d?"#211b14":"#efe6d3")+",stroke:"+pal.line+",color:"+pal.ink+",stroke-dasharray:4 3";
+  ids.forEach(i=>{ const e=BY[i]; code+="\n  class "+i+" "+(e?(e.type==="ev"?"cr":e.type):(i.startsWith("ev")?"cr":"ext")); });
+  real.forEach(i=>{ code+="\n  click "+i+" href \"#/fiche/"+i+"\""; });
+  if(code.includes(" evA")) code+="\n  click evA href \"#/fiche/ev-arrest\"";
+  try{
+    const {svg,bindFunctions}=await mermaid.render("gen"+(++mmN),code);
+    if(tok!==routeToken) return;
+    box.innerHTML=svg; if(bindFunctions) bindFunctions(box);
+    $$("a",box).forEach(a=>{ const h=a.getAttribute("xlink:href")||a.getAttribute("href"); if(h&&h.startsWith("#/")){ a.removeAttribute("target"); a.addEventListener("click",ev=>{ ev.preventDefault(); location.hash=h; }); }});
+  }catch(err){ box.innerHTML=`<p class="none">Impossible d’afficher l’arbre.</p>`; console.error(err); }
+}
+
+/* ---------- blasons ---------- */
+const SHIELD=`<svg viewBox="0 0 70 84" aria-hidden="true"><path d="M4 4h62v34c0 22-15 36-31 42C19 74 4 60 4 38z" fill="none" stroke="currentColor" stroke-width="3"/></svg>`;
+function renderBlasons(){
+  const types=["gm","pape","roi","rj"];
+  app.innerHTML=`<section class="wrap"><h1>Blasons</h1>
+   <p class="lead">Armoiries référencées sur Wikidata et Wikimedia Commons, chargées à la volée. Un écu vide signifie qu’aucun blason n’est référencé : la fiche propose alors une recherche sur Commons. Beaucoup d’armoiries des XIᵉ-XIIIᵉ siècles sont attribuées a posteriori.</p>
+   <div class="chips" id="bt">${types.map(t=>`<button class="fchip t-${t} ${state.bl.has(t)?"on":""}" data-t="${t}"><i></i>${TYPES[t].short}</button>`).join("")}</div>
+   <p class="count" id="bc"></p><div class="bgrid" id="bg"></div></section>`;
+  $$("#bt [data-t]").forEach(b=>b.addEventListener("click",()=>{ const t=b.dataset.t; state.bl.has(t)?state.bl.delete(t):state.bl.add(t); b.classList.toggle("on"); drawBl(routeToken); }));
+  drawBl(routeToken);
+}
+async function drawBl(tok){
+  const list=ALL.filter(e=>state.bl.has(e.type)&&e.type!=="ev"&&e.type!=="cr").sort((a,b)=>a.s-b.s);
+  const card=e=>{ const w=WK[e.id]; const img=w&&w.bl?`<img src="${esc(blasonUrl(w.bl,200))}" alt="Blason : ${esc(e.name)}" loading="lazy">`:SHIELD;
+    return `<a class="bl t-${e.type}" href="#/fiche/${e.id}"><span class="shield">${img}</span><b>${esc(e.name)}</b><small>${esc(TYPES[e.type].label)}${e.n?" n° "+e.n:""}</small></a>`; };
+  $("#bg").innerHTML=list.map(card).join("");
+  $("#bc").textContent=list.length?"Chargement des blasons…":"Sélectionnez au moins une catégorie.";
+  try{ await wikiBatch(list); }catch(x){}
+  if(tok!==routeToken) return;
+  $("#bg").innerHTML=list.map(card).join("");
+  const n=list.filter(e=>WK[e.id]&&WK[e.id].bl).length;
+  $("#bc").textContent=list.length? n+" blason"+(n>1?"s":"")+" trouvé"+(n>1?"s":"")+" sur "+list.length+" personnages.":"";
+}
+
+/* ---------- à propos ---------- */
+function renderAbout(){
+  app.innerHTML=`<section class="wrap" style="max-width:820px"><h1>À propos</h1>
+   <p>Ce site est la version interactive du <i>Tableau synoptique de l’Ordre des Templiers (les croisades, les rois, les papes)</i> réalisé par <b>${esc(DATA.meta.auteur)}</b>. Le tableau original met en regard, sur six colonnes, les grands maîtres du Temple, les croisades, les rois capétiens, les papes et les rois de Jérusalem et de Saint-Jean-d’Acre, de 1060 à 1314.</p>
+   <h2>Comment naviguer</h2>
+   <ul>
+    <li><a href="#/frise">Frise</a> : les six colonnes alignées sur le temps ; zoom, clic sur une barre ou sur une année.</li>
+    <li><a href="#/annee">Année par année</a> : qui gouvernait quoi en une année donnée, avec lecture automatique.</li>
+    <li><a href="#/liste">Index</a> : filtres par catégorie, siècle, origine, ordre religieux.</li>
+    <li>Chaque fiche liste les contemporains et les événements liés, avec navigation précédent / suivant (flèches du clavier).</li>
+    <li><a href="#/carte">Carte</a>, <a href="#/genealogie">généalogies</a> et <a href="#/blasons">blasons</a>.</li>
+   </ul>
+   <h2>Sources</h2>
+   <p>Les dates, durées et commentaires proviennent du tableau original. Les illustrations, extraits et blasons sont chargés en direct depuis Wikipédia, Wikidata et Wikimedia Commons, sous leurs licences respectives. Fonds de carte : OpenStreetMap et CARTO.</p>
+   <p class="src">Les données sont regroupées dans un seul bloc en tête du fichier <code>index.html</code>, ce qui permet de corriger ou compléter le contenu sans toucher au reste.</p>
+  </section>`;
+}
+
+route();
+})();
+</script>
+</body>
+</html>
