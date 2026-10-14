@@ -251,7 +251,7 @@ footer p{margin:.2em 0}
 <main id="app"></main>
 <footer>
   <p>D’après le <i>Tableau synoptique de l’Ordre des Templiers</i> de François-Xavier Laurec.</p>
-  <p>Illustrations et blasons chargés à la volée depuis Wikipédia, Wikidata et Wikimedia Commons · Fonds de carte © OpenStreetMap, © CARTO.</p>
+  <p>Illustrations et blasons chargés à la volée depuis Wikipédia, Wikidata et Wikimedia Commons · Fonds de carte © OpenStreetMap, © OpenTopoMap, © IGN.</p>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1051,7 +1051,12 @@ function renderCarte(focus){
     </div></div></section>`;
   if(typeof L==="undefined"){ $("#map").innerHTML=`<p class="none" style="padding:20px">La carte n’a pas pu être chargée (connexion requise).</p>`; return; }
   map=L.map("map",{scrollWheelZoom:false,worldCopyJump:true});
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{attribution:"© OpenStreetMap © CARTO",subdomains:"abcd",maxZoom:18}).addTo(map);
+  const fonds={
+    "OpenStreetMap":L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap",maxZoom:19}),
+    "Relief (OpenTopoMap)":L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap, © OpenTopoMap (CC-BY-SA)",subdomains:"abc",maxZoom:17}),
+    "Plan IGN (France)":L.tileLayer("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",{attribution:"© IGN Géoplateforme",maxZoom:18})
+  };
+  fonds["OpenStreetMap"].addTo(map);
   const cGm=cssVar("--gm"), cEv=cssVar("--ev");
   const gO=L.layerGroup().addTo(map), gL=L.layerGroup().addTo(map), mk={};
   DATA.places.forEach(p=>{
@@ -1062,7 +1067,7 @@ function renderCarte(focus){
     m.bindPopup(`<b>${esc(p.name)}</b>${p.desc?`<p style="margin:.4em 0 0">${esc(p.desc)}</p>`:""}${rel.length?`<div class="chips">${rel.map(chip).join("")}</div>`:""}<div class="plinks">${placeLinks(p)}</div>`);
     m.addTo(isO?gO:gL); mk[p.id]=m;
   });
-  L.control.layers(null,{"Origines des grands maîtres":gO,"Lieux d’histoire":gL},{collapsed:true}).addTo(map);
+  L.control.layers(fonds,{"Origines des grands maîtres":gO,"Lieux d’histoire":gL},{collapsed:true}).addTo(map);
   const V={fr:[[42.2,-2.5],[51.6,8.5]],or:[[30.5,8],[42.5,36.5]],all:[[30,-3],[52,37]]};
   const go=v=>{ map.fitBounds(V[v]); $$("#mv button").forEach(b=>b.classList.toggle("on",b.dataset.v===v)); };
   $$("#mv button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.v)));
@@ -1145,7 +1150,7 @@ function renderAbout(){
     <li><a href="#/carte">Carte</a>, <a href="#/genealogie">généalogies</a> et <a href="#/blasons">blasons</a>.</li>
    </ul>
    <h2>Sources</h2>
-   <p>Les dates, durées et commentaires proviennent du tableau original. Les illustrations, extraits et blasons sont chargés en direct depuis Wikipédia, Wikidata et Wikimedia Commons, sous leurs licences respectives. Fonds de carte : OpenStreetMap et CARTO.</p>
+   <p>Les dates, durées et commentaires proviennent du tableau original. Les illustrations, extraits et blasons sont chargés en direct depuis Wikipédia, Wikidata et Wikimedia Commons, sous leurs licences respectives. Fonds de carte : OpenStreetMap, OpenTopoMap et IGN.</p>
    <p class="src">Les données sont regroupées dans un seul bloc en tête du fichier <code>index.html</code>, ce qui permet de corriger ou compléter le contenu sans toucher au reste.</p>
   </section>`;
 }
