@@ -201,6 +201,9 @@ svg .curl{fill:var(--accent);font:700 13px Cinzel,serif}
 .leaflet-popup-content .chips{margin-top:6px}
 .leaflet-popup-content .chip{font-size:.85rem;color:#2a2017;background:#fff}
 .note{font-size:.9rem;color:var(--muted);margin-top:8px}
+.plinks{font-size:.85rem;color:var(--muted);margin:2px 0 6px}
+.plinks a{color:var(--muted)}
+.leaflet-popup-content .plinks{margin-top:8px}
 
 /* généalogie & blasons */
 .mm{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);min-height:200px}
@@ -258,6 +261,8 @@ footer p{margin:.2em 0}
      DONNÉES — tout le contenu du site est ici. Pour corriger une date ou
      un texte, modifier ce bloc puis pousser le fichier sur GitHub.
      Dates : "AAAA", "AAAA-MM" ou "AAAA-MM-JJ".
+     Blason imposé : ajouter blason:"Nom_du_fichier.svg" (fichier de
+     Wikimedia Commons) à une entrée ; sinon recherche automatique.
      ===================================================================== -->
 <script>
 const DATA = {
@@ -908,7 +913,7 @@ function renderFiche(id){
   if(e.type==="cr") facts.push(["Théâtre",e.ts===false?"Hors Terre sainte":"Terre sainte"]);
   if(e.capital) facts.push(["Capitale",e.capital]);
   const places=[e.place].concat(e.places||[]).filter(Boolean).map(p=>PL[p]).filter(Boolean);
-  if(places.length) facts.push(["Lieu",places.map(p=>`<a href="#/carte/${p.id}">${esc(p.name)}</a>`).join(", "),true]);
+  if(places.length) facts.push(["Lieu",places.map(p=>`<a href="#/carte/${p.id}">${esc(p.name)}</a><div class="plinks">${placeLinks(p)}</div>`).join(""),true]);
   const notes=(e.notes||[]).concat(e.text?[e.text]:[]);
 
   const contemp=ORDER.filter(t=>t!==e.type).map(t=>({t,list:SER[t].filter(x=>overlaps(e,x))})).filter(g=>g.list.length);
@@ -956,14 +961,14 @@ async function loadWiki(e,tok){
     if(tok!==routeToken) return;
     const url=sum&&sum.content_urls?sum.content_urls.desktop.page:"https://fr.wikipedia.org/wiki/"+encodeURIComponent(w.t.replace(/ /g,"_"));
     const img=(sum&&sum.thumbnail&&sum.thumbnail.source)||w.img;
-    box.innerHTML=`<div class="imgs">${img?`<figure><img src="${esc(img)}" alt="Illustration : ${esc(e.name)}" loading="lazy"><figcaption>Illustration</figcaption></figure>`:""}${w.bl?`<figure><img src="${esc(blasonUrl(w.bl,220))}" alt="Blason : ${esc(e.name)}" loading="lazy"><figcaption>Blason</figcaption></figure>`:""}</div>
+    box.innerHTML=`<div class="imgs">${img?`<figure><img src="${esc(img)}" alt="Illustration : ${esc(e.name)}" loading="lazy"><figcaption>Illustration</figcaption></figure>`:""}${(bf=>bf?`<figure><img src="${esc(blasonUrl(bf.f,220))}" alt="Blason : ${esc(e.name)}" loading="lazy" onerror="this.parentNode.remove()"><figcaption>Blason (${esc(bf.src)})</figcaption></figure>`:"")(blasonFor(e))}</div>
       ${sum&&sum.extract?`<p>${esc(sum.extract)}</p><p class="src">Extrait : Wikipédia (CC BY-SA)</p>`:""}${wikiLinks(e,url)}`;
   }catch(err){ if(tok===routeToken) box.innerHTML=wikiLinks(e); }
 }
 
 /* ---------- Wikipédia / Wikidata (cache local) ---------- */
-let WK={}; try{ WK=JSON.parse(localStorage.getItem("tpl-wk-1"))||{}; }catch(e){ WK={}; }
-const saveWK=()=>{ try{ localStorage.setItem("tpl-wk-1",JSON.stringify(WK)); }catch(e){} };
+let WK={}; try{ WK=JSON.parse(localStorage.getItem("tpl-wk-2"))||{}; }catch(e){ WK={}; }
+const saveWK=()=>{ try{ localStorage.setItem("tpl-wk-2",JSON.stringify(WK)); }catch(e){} };
 const blasonUrl=(f,w)=>"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(f.replace(/ /g,"_"))+"?width="+w;
 async function wikiBatch(list){
   const todo=list.filter(e=>e.wiki && !WK[e.id]);
@@ -988,10 +993,45 @@ async function wikiBatch(list){
       const r=await fetch("https://query.wikidata.org/sparql?format=json&query="+encodeURIComponent(sparql),{headers:{Accept:"application/sparql-results+json"}});
       const j=await r.json(); const m={};
       j.results.bindings.forEach(b=>{ const q=b.i.value.split("/").pop(); if(b.a&&!m[q]) m[q]=decodeURIComponent(b.a.value.split("/Special:FilePath/").pop()); });
-      need.forEach(w=>{ w.bl=m[w.q]||null; });
+      need.forEach(w=>{ w.bl=m[w.q]||null; if(w.bl) w.src="Wikidata"; });
     }catch(x){ /* blasons indisponibles */ }
   }
+  // 2e source : images de l'article Wikipédia dont le nom évoque un blason
+  const miss=list.map(e=>WK[e.id]).filter(w=>w&&w.t&&!w.bl&&!w.wp);
+  for(let i=0;i<miss.length;i+=40){
+    const ch=miss.slice(i,i+40), found={};
+    let cont=null, guard=0;
+    try{
+      do{
+        const u="https://fr.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&prop=images&imlimit=max&titles="+encodeURIComponent(ch.map(w=>w.t).join("|"))+(cont?"&imcontinue="+encodeURIComponent(cont):"");
+        const j=await (await fetch(u)).json();
+        (j.query.pages||[]).forEach(p=>{ (p.images||[]).forEach(im=>{
+          const f=im.title.replace(/^[^:]+:/,"");
+          if(!found[p.title] && BLASON_RX.test(f) && !BLASON_NO.test(f)) found[p.title]=f;
+        }); });
+        cont=j.continue&&j.continue.imcontinue; guard++;
+      }while(cont&&guard<6);
+    }catch(x){}
+    ch.forEach(w=>{ w.wp=1; if(found[w.t]){ w.bl=found[w.t]; w.src="Wikipédia"; } });
+  }
   saveWK();
+}
+const BLASON_RX=/(blason|armoiries|arms|c[ _]o[ _]a|coa[ _]|stemma|wappen|escudo)/i;
+const BLASON_NO=/(temple|templier|templar|papacy|papaut|emblem|ordre|order|vatican|saint-si|holy see|flag|drapeau|croix|cross)/i;
+function blasonFor(e){ if(e.blason) return {f:e.blason,src:"tableau"}; const w=WK[e.id]; return w&&w.bl?{f:w.bl,src:w.src||"Wikidata"}:null; }
+
+/* ---------- liens cartographiques ---------- */
+const NOT_FR=["flandre","catalogne","torroja"];
+const inFrance=p=>!NOT_FR.includes(p.id) && p.lat>42.3 && p.lat<51.1 && p.lng>-5 && p.lng<8.3;
+const ORIENT=p=>p.lng>25;
+const CASSINI=(lat,lng,z)=>"https://www.geoportail.gouv.fr/carte?c="+lng+","+lat+"&z="+z+"&l0=GEOGRAPHICALGRIDSYSTEMS.CASSINI::GEOPORTAIL:OGC:WMTS(1)&permalink=yes";
+function placeLinks(p){
+  const z=p.approx?9:13, L=[];
+  if(inFrance(p)) L.push(`<a href="${CASSINI(p.lat,p.lng,z)}" target="_blank" rel="noopener">Cassini (IGN)</a>`);
+  if(ORIENT(p)) L.push(`<a href="https://fr.wikipedia.org/wiki/%C3%89tats_latins_d%27Orient" target="_blank" rel="noopener">États latins d’Orient</a>`);
+  L.push(`<a href="https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=${z}/${p.lat}/${p.lng}" target="_blank" rel="noopener">OpenStreetMap</a>`);
+  L.push(`<a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener">Google Maps</a>`);
+  return L.join(" · ");
 }
 
 /* ---------- carte ---------- */
@@ -1001,7 +1041,14 @@ function renderCarte(focus){
    <div class="fctrl"><div class="seg" id="mv"><button data-v="fr">France</button><button data-v="or">Orient latin</button><button data-v="all">Tout</button></div>
    <span class="legend"><span><span class="dot t-gm"></span> Origine d’un grand maître</span><span><span class="dot t-ev"></span> Lieu d’histoire</span></span></div>
    <div id="map"></div>
-   <p class="note">Les origines connues seulement à l’échelle d’une région sont placées approximativement (cercle en pointillé). Thomas Béraud (Italie ou Angleterre) n’est pas localisé.</p></section>`;
+   <p class="note">Les origines connues seulement à l’échelle d’une région sont placées approximativement (cercle en pointillé). Thomas Béraud (Italie ou Angleterre) n’est pas localisé.</p>
+   <div class="panel" style="margin-top:18px"><h2>Cartes historiques</h2>
+    <div class="links" style="display:flex;flex-direction:column;gap:6px">
+     <a href="${CASSINI(46.6,2.4,6)}" target="_blank" rel="noopener">Carte de Cassini (XVIIIᵉ siècle) — Géoportail IGN ↗</a>
+     <a href="https://fr.wikipedia.org/wiki/%C3%89tats_latins_d%27Orient" target="_blank" rel="noopener">États latins d’Orient — Wikipédia ↗</a>
+     <a href="https://commons.wikimedia.org/w/index.php?search=map+crusader+states" target="_blank" rel="noopener">Cartes des États croisés — Wikimedia Commons ↗</a>
+     <a href="https://commons.wikimedia.org/w/index.php?search=map+commanderies+templi%C3%A8res" target="_blank" rel="noopener">Cartes des commanderies templières — Wikimedia Commons ↗</a>
+    </div></div></section>`;
   if(typeof L==="undefined"){ $("#map").innerHTML=`<p class="none" style="padding:20px">La carte n’a pas pu être chargée (connexion requise).</p>`; return; }
   map=L.map("map",{scrollWheelZoom:false,worldCopyJump:true});
   L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{attribution:"© OpenStreetMap © CARTO",subdomains:"abcd",maxZoom:18}).addTo(map);
@@ -1012,7 +1059,7 @@ function renderCarte(focus){
     const isO=rel.some(x=>x.type==="gm"&&x.place===p.id);
     const col=isO?cGm:cEv;
     const m=L.circleMarker([p.lat,p.lng],{radius:isO?8:9,color:col,weight:2,fillColor:col,fillOpacity:p.approx?.25:.75,dashArray:p.approx?"4 3":null});
-    m.bindPopup(`<b>${esc(p.name)}</b>${p.desc?`<p style="margin:.4em 0 0">${esc(p.desc)}</p>`:""}${rel.length?`<div class="chips">${rel.map(chip).join("")}</div>`:""}`);
+    m.bindPopup(`<b>${esc(p.name)}</b>${p.desc?`<p style="margin:.4em 0 0">${esc(p.desc)}</p>`:""}${rel.length?`<div class="chips">${rel.map(chip).join("")}</div>`:""}<div class="plinks">${placeLinks(p)}</div>`);
     m.addTo(isO?gO:gL); mk[p.id]=m;
   });
   L.control.layers(null,{"Origines des grands maîtres":gO,"Lieux d’histoire":gL},{collapsed:true}).addTo(map);
@@ -1062,6 +1109,7 @@ async function drawGen(tok){
 
 /* ---------- blasons ---------- */
 const SHIELD=`<svg viewBox="0 0 70 84" aria-hidden="true"><path d="M4 4h62v34c0 22-15 36-31 42C19 74 4 60 4 38z" fill="none" stroke="currentColor" stroke-width="3"/></svg>`;
+window.SHIELD_STR=SHIELD;
 function renderBlasons(){
   const types=["gm","pape","roi","rj"];
   app.innerHTML=`<section class="wrap"><h1>Blasons</h1>
@@ -1073,14 +1121,14 @@ function renderBlasons(){
 }
 async function drawBl(tok){
   const list=ALL.filter(e=>state.bl.has(e.type)&&e.type!=="ev"&&e.type!=="cr").sort((a,b)=>a.s-b.s);
-  const card=e=>{ const w=WK[e.id]; const img=w&&w.bl?`<img src="${esc(blasonUrl(w.bl,200))}" alt="Blason : ${esc(e.name)}" loading="lazy">`:SHIELD;
+  const card=e=>{ const bf=blasonFor(e); const img=bf?`<img src="${esc(blasonUrl(bf.f,200))}" alt="Blason : ${esc(e.name)}" loading="lazy" onerror="this.outerHTML=SHIELD_STR">`:SHIELD;
     return `<a class="bl t-${e.type}" href="#/fiche/${e.id}"><span class="shield">${img}</span><b>${esc(e.name)}</b><small>${esc(TYPES[e.type].label)}${e.n?" n° "+e.n:""}</small></a>`; };
   $("#bg").innerHTML=list.map(card).join("");
   $("#bc").textContent=list.length?"Chargement des blasons…":"Sélectionnez au moins une catégorie.";
   try{ await wikiBatch(list); }catch(x){}
   if(tok!==routeToken) return;
   $("#bg").innerHTML=list.map(card).join("");
-  const n=list.filter(e=>WK[e.id]&&WK[e.id].bl).length;
+  const n=list.filter(e=>blasonFor(e)).length;
   $("#bc").textContent=list.length? n+" blason"+(n>1?"s":"")+" trouvé"+(n>1?"s":"")+" sur "+list.length+" personnages.":"";
 }
 
